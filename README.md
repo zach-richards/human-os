@@ -24,7 +24,7 @@ It is important to note that this software is non-invasive, privacy first (never
 
 Here's an example:
 
-'''mermaid
+```mermaid
     flowchart TD
         A[/User Input/] -->
         |Switch Tabs| B[Update Cognitive Model] -->
@@ -37,5 +37,4 @@ Here's an example:
         F --> |No| H[System Adjustment] -->
         |Send Another
         Notification Later| A
-'''
->>>>>>> c46e81c (Added README)
+```
