@@ -27,14 +27,11 @@ Here's an example:
 ```mermaid
     flowchart TD
         A[/User Input/] -->
-        |Switch Tabs| B[Update Cognitive Model] -->
-        |Focus Low| C[(Cognitive Model)] -->
+        B[Update Cognitive Model] -->
+        C[(Cognitive Model)] -->
         D[Decision Engine] -->
-        |Get User on Task| E[Send Notification] -->
-        |Back on Task?| F{User Response} -->
-        |Yes| G[System Adjustement] -->
-        |Close Distraction, Open Task| A
-        F --> |No| H[System Adjustment] -->
-        |Send Another
-        Notification Later| A
+        E[Send Notification] -->
+        F[/User Response/] -->
+        G[System Adjustement] -->
+        A
 ```
