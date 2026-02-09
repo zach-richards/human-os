@@ -4,3 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+x11rb = "0.13.2"
+once_cell = "1.21.3"
+rdev = "0.4.6"
+
+[profile.release]
+lto = true       # link-time optimization
+codegen-units = 1
+opt-level = "z"  # smallest size
+panic = "abort"  # remove stack unwinding

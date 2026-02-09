@@ -1,3 +1,10 @@
+// main.rs
+
+mod sys;
+
+use crate::sys::system::track_system;
+
 fn main() {
-    println!("Hello, world!");
+    track_system().unwrap();
 }
+
