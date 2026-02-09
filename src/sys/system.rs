@@ -1,11 +1,12 @@
 // system.rs
 
-use std::time::Instant;
+use std::time::{Instant, Duration};
 use std::sync::{Arc, Mutex};
 
 use rdev::{Event, EventType, listen, ListenError};
 use once_cell::sync::Lazy;
 
+use crate::sys::mouse;
 use crate::sys::keyboard;
 use crate::sys::timeout_thread;
 
@@ -21,11 +22,11 @@ pub struct SystemInfo {
     pub keys_in_burst: u32,
 
     // Mouse
-    //pub mouse_moved: bool,
-    //pub mouse_clicked: bool,
+    pub last_mouse_move: Option<Instant>,
+    pub last_mouse_press: Option<Instant>,
 
     // Scroll wheel
-    //pub scroll_active: bool,
+    pub last_wheel_move: Option<Instant>,
 
     // Window context
     //pub focused_window: Option<String>,
@@ -36,24 +37,36 @@ pub struct SystemInfo {
 pub static SYSTEM_INFO: Lazy<Arc<Mutex<SystemInfo>>> = 
     Lazy::new(|| Arc::new(Mutex::new(SystemInfo::new())));
 
-//const THROTTLE: Duration = Duration::from_millis(50);
-
 fn handle_event(event: Event) {
+    const THROTTLE: Duration = Duration::from_millis(50);
+
     if let Ok(mut sys_info) = SYSTEM_INFO.lock() {
         match event.event_type {
             EventType::KeyPress(_) => {
                 keyboard::handle_key_press(&mut *sys_info);
             }
 
-            /* Some(EventType::MousePress(_)) {
-                mouse.button_active();
+            EventType::ButtonPress(_) => {
+                mouse::handle_mouse_press(&mut *sys_info);
             }
-            Some(EventType::MouseMove {..} && last_mouse_move > THROTTLE) {
-                mouse.movement_active();
+            EventType::MouseMove {..} => {
+                if sys_info
+                    .last_mouse_move
+                    .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
+                {
+                    sys_info.last_mouse_move = Some(Instant::now());
+                    mouse::handle_mouse_move(&mut *sys_info);
+                }
             }
-            Some(EventType::Wheel {..} && last_wheel_move > THROTTLE) {
-                mouse.wheel_active();
-            } */
+            EventType::Wheel {..} => {
+                if sys_info
+                    .last_wheel_move
+                    .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
+                {
+                    sys_info.last_wheel_move = Some(Instant::now());
+                    mouse::handle_wheel(&mut *sys_info);
+                }
+            }
             // window active
             // internet tab active
             // window/app name
@@ -85,11 +98,11 @@ impl SystemInfo {
             keys_in_burst: 0,
 
             // Mouse
-            //mouse_moved: false,
-            //mouse_clicked: false,
+            last_mouse_move: None,
+            last_mouse_press: None,
 
             // Scroll wheel
-            //scroll_active: false,
+            last_wheel_move: None,
 
             // Window context
             //focused_window: None,
