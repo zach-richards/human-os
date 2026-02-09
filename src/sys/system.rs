@@ -5,7 +5,9 @@ use std::sync::{Arc, Mutex};
 
 use rdev::{Event, EventType, listen, ListenError};
 use once_cell::sync::Lazy;
+use x11rb::protocol::xproto::*;
 
+use crate::sys::window;
 use crate::sys::mouse;
 use crate::sys::keyboard;
 use crate::sys::timeout_thread;
@@ -29,8 +31,8 @@ pub struct SystemInfo {
     pub last_wheel_move: Option<Instant>,
 
     // Window context
-    //pub focused_window: Option<String>,
-    //pub last_window_change: Option<Instant>,    
+    pub focused_window: Option<String>,
+    pub last_window_change: Option<Instant>,    
 }
 
 // create global variable to share across the system
@@ -105,8 +107,8 @@ impl SystemInfo {
             last_wheel_move: None,
 
             // Window context
-            //focused_window: None,
-            //last_window_change: None,
+            focused_window: None,
+            last_window_change: None,
         }
     }
 }
