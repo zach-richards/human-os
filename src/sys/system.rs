@@ -7,6 +7,7 @@ use rdev::{Event, EventType, listen, ListenError};
 use once_cell::sync::Lazy;
 
 use crate::sys::keyboard;
+use crate::sys::timeout_thread;
 
 pub struct SystemInfo {
     // Timing
@@ -16,7 +17,9 @@ pub struct SystemInfo {
     // Keyboard
     pub last_key_time: Option<Instant>,
     pub burst_start: Option<Instant>,
+    pub is_burst: bool,
     pub keys_in_burst: u32,
+    burst_message: bool,
 
     // Mouse
     pub mouse_moved: bool,
@@ -37,10 +40,10 @@ pub static SYSTEM_INFO: Lazy<Arc<Mutex<SystemInfo>>> =
 const THROTTLE: Duration = Duration::from_millis(50);
 
 fn handle_event(event: Event) {
-    if let Ok(mut sys) = SYSTEM_INFO.lock() {
+    if let Ok(mut sys_info) = SYSTEM_INFO.lock() {
         match event.event_type {
             EventType::KeyPress(_) => {
-                keyboard::handle_key_press(&mut *sys);
+                keyboard::handle_key_press(&mut *sys_info);
             }
 
             /* Some(EventType::MousePress(_)) {
@@ -65,7 +68,8 @@ fn handle_event(event: Event) {
 }
 
 pub fn track_system() -> Result<(), ListenError>  {
-    listen(handle_event)
+    timeout_thread::timeout_thread();
+    listen(move |event: Event| {handle_event(event)})
 }
 
 impl SystemInfo {
@@ -78,7 +82,9 @@ impl SystemInfo {
             // Keyboard
             last_key_time: None,
             burst_start: None,
+            is_burst: false,
             keys_in_burst: 0,
+            burst_message: false,
 
             // Mouse
             mouse_moved: false,
