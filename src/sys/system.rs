@@ -5,9 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use rdev::{Event, EventType, listen, ListenError};
 use once_cell::sync::Lazy;
-use x11rb::protocol::xproto::*;
 
-use crate::sys::window;
 use crate::sys::mouse;
 use crate::sys::keyboard;
 use crate::sys::timeout_thread;

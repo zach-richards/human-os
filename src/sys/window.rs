@@ -1,12 +1,9 @@
 // window.rs
 
-use std::thread::sleep;
-use std::time::Duration;
 use std::error::Error;
 
 use x11rb::connection::Connection;
 use x11rb::protocol::xproto::*;
-use x11rb::rust_connection::RustConnection;
 
 use crate::sys::system::SystemInfo;
 
@@ -21,19 +18,16 @@ fn get_window_name<C: Connection>(conn: &C, window: Window) -> Result<Option<Str
         .reply()?
         .atom;
 
-    let Ok(reply) = match conn
-        .get_property(
-            false,
-            window,
-            net_wm_name,
-            utf8_string,
-            0,
-            u32::MAX,
-        )?
-    {
-        Ok(r) => r,
-        Err(_) => return Ok(None),
-    };
+    let reply = conn
+    .get_property(
+        false,
+        window,
+        net_wm_name,
+        utf8_string,
+        0,
+        u32::MAX,
+    )?
+    .reply()?;
 
     if reply.value.is_empty() {
         return Ok(None);
@@ -52,8 +46,10 @@ pub fn handle_window_switch(sys_info: &mut SystemInfo) -> Result<(), Box<dyn Err
     let reply = conn.get_property(false, root, net_active, AtomEnum::WINDOW, 0, 1)?.reply()?;
 
     if let Some(active_window) = reply.value32().and_then(|mut i| i.next()) {
-        if let Ok(Some(name)) = get_window_name(&conn, active_window)? {
+        if let Some(name) = get_window_name(&conn, active_window)? {
             println!("Active window {}", name);
         }
     }
+
+    Ok(())
 }
