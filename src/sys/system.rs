@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use rdev::{Event, EventType, listen, ListenError};
 use once_cell::sync::Lazy;
 
+use crate::sys::window;
 use crate::sys::mouse;
 use crate::sys::keyboard;
 use crate::sys::timeout_thread;
@@ -81,6 +82,7 @@ fn handle_event(event: Event) {
 
 pub fn track_system() -> Result<(), ListenError>  {
     timeout_thread::timeout_thread();
+    window::start_tracking_thread();
     listen(move |event: Event| {handle_event(event)})
 }
 
