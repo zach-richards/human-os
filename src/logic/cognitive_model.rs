@@ -1,13 +1,5 @@
 // cognitive_model.rs
 
-fn calc_score() {
-    FocusScore =
-        (NormKPS * 0.40) + // keystrokes a min (capped at 5 KPS)
-        (SwitchScore * 0.30) + // amount of switching
-        (IdleScore * 0.20) + // idling
-        (BackspaceScore * 0.10) // amount of backspacing
-}
-
 /*
 
 KPS = keystrokes per second (over 60 seconds)
@@ -56,11 +48,20 @@ pub struct CognitiveModel {
 
 impl CognitiveModel {
     pub fn new() -> Self {
-        score: 0.50,
-        state: FocusState::from_score(score);
+        Self {
+            score: 0.50,
+            state: FocusState::from_score(score);
+        }
     }
 
-    pub update() {
-        
+    fn calc_score() {
+        FocusScore =
+            (NormKPS * 0.40) + // keystrokes a min (capped at 5 KPS)
+            (SwitchScore * 0.30) + // amount of switching
+            (IdleScore * 0.20) + // idling
+            (BackspaceScore * 0.10) // amount of backspacing
+    }
+
+    pub fn update() { 
     }
 }
