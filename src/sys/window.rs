@@ -7,7 +7,9 @@ use x11rb::protocol::xproto::*;
 use x11rb::protocol::Event;
 use x11rb::rust_connection::RustConnection;
 
-pub fn track_window_switch() -> Result<(), Box<dyn Error>> {
+use crate::sys::system;
+
+pub fn track_window_switches(sys_info: &mut system::SystemInfo) -> Result<(), Box<dyn Error>> {
     // Connect to X server
     let (conn, screen_num) = RustConnection::connect(None)?;
     let screen = &conn.setup().roots[screen_num];
@@ -33,6 +35,7 @@ pub fn track_window_switch() -> Result<(), Box<dyn Error>> {
 
         if let Event::PropertyNotify(prop) = event {
             if prop.atom == net_active_atom {
+                sys_info.switch_rate;
                 println!("Window switched!");
             }
         }
