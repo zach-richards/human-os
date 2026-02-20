@@ -128,7 +128,7 @@ dependencies = [
 
 [[package]]
 name = "human-os"
-version = "0.2.0"
+version = "0.1.3"
 dependencies = [
  "once_cell",
  "rdev",
