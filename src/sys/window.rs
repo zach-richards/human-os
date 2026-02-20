@@ -1,13 +1,18 @@
 // window.rs
 
 use std::error::Error;
+use std::sync::{ Arc, Mutex };
+use std::thread;
 
+use once_cell::sync::Lazy;
 use x11rb::connection::Connection;
 use x11rb::protocol::xproto::*;
 use x11rb::protocol::Event;
 use x11rb::rust_connection::RustConnection;
 
-pub fn track_window_switch() -> Result<(), Box<dyn Error>> {
+use crate::sys::system;
+
+pub fn track_window_switches(sys_info: &Lazy<Arc<Mutex<system::SystemInfo>>>) -> Result<(), Box<dyn Error>> {
     // Connect to X server
     let (conn, screen_num) = RustConnection::connect(None)?;
     let screen = &conn.setup().roots[screen_num];
@@ -28,15 +33,16 @@ pub fn track_window_switch() -> Result<(), Box<dyn Error>> {
 
     conn.flush()?;
 
-    println!("Listening for window switches...");
-
     loop {
         let event = conn.wait_for_event()?;
 
         if let Event::PropertyNotify(prop) = event {
             if prop.atom == net_active_atom {
+                let mut sys_info_lock = sys_info.lock().unwrap();
+                sys_info_lock.switch_rate += 1;
                 println!("Window switched!");
             }
         }
+        thread::yield_now();
     }
 }

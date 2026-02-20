@@ -127,8 +127,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "human_os"
-version = "0.1.4"
+name = "human-os"
+version = "0.2.0"
 dependencies = [
  "once_cell",
  "rdev",
