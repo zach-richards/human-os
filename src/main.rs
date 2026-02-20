@@ -18,13 +18,12 @@ use crate::sys::keyboard;
 static SYSTEM_INFO: Lazy<Arc<Mutex<sys::system::SystemInfo>>> =
     Lazy::new(|| Arc::new(Mutex::new(system::SystemInfo::new())));
 
-static THROTTLE: Duration = Duration::from_millis(50);
+static THROTTLE: Duration = Duration::from_millis(100);
 
 fn handle_event(event: Event) {
     let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
 
     // track keyboard, mouse, and mouse buttons in seperate thread
-    println!("Hello hello");
     match event.event_type {
         EventType::KeyPress(Key::Backspace) => {
             keyboard::handle_backspace(&mut mut_sys_info);
@@ -67,20 +66,17 @@ fn main() -> Result<(), ListenError> {
     println!("  DEBUG LOG");
     println!("--------------");
 
-    let sys_info_input = Arc::clone(&SYSTEM_INFO);
     thread::spawn(move || {
+        
         listen(handle_event).unwrap();
+        thread::yield_now();
         
     });
 
     // track window switches in different thread
-    let sys_info_window = Arc::clone(&sys_info);
     thread::spawn(move || {
-
-        let mut_sys_info = sys_info_window.lock().unwrap();
-
-        window::track_window_switches(&mut mut_sys_info);
-    
+        let sys_info_clone = &SYSTEM_INFO;
+        window::track_window_switches(sys_info_clone).unwrap();
     });
 
     loop {}
