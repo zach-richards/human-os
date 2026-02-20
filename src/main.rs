@@ -2,120 +2,86 @@
 
 mod sys;
 
-use std::sync::{Mutex, mpsc};
+use std::time::{ Duration, Instant };
+use std::sync::{ Arc, Mutex };
 use std::thread;
-use std::time::{Duration, Instant};
 
-use rdev::{listen, Event, EventType, Key};
+use rdev::{ listen, Event, EventType, ListenError, Key };
 use once_cell::sync::Lazy;
 
-use crate::sys::keyboard;
 use crate::sys::mouse;
-use crate::sys::system::SystemInfo;
+use crate::sys::system;
 use crate::sys::window;
+use crate::sys::keyboard;
 
-static GLOBAL_TX: Lazy<Mutex<Option<mpsc::Sender<SystemEvent>>>> =
-    Lazy::new(|| Mutex::new(None));
+// create global variable to share across the system
+static SYSTEM_INFO: Lazy<Arc<Mutex<sys::system::SystemInfo>>> =
+    Lazy::new(|| Arc::new(Mutex::new(system::SystemInfo::new())));
 
-// Throttle for mouse movement & wheel
 static THROTTLE: Duration = Duration::from_millis(50);
 
-/// Unified application event
-enum SystemEvent {
-    Input(Event),
-    WindowChanged(String),
-}
+fn handle_event(event: Event) {
+    let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
 
-fn event_callback(event: Event) {
-    if let Some(tx) = &*GLOBAL_TX.lock().unwrap() {
-        tx.send(SystemEvent::Input(event)).unwrap();
+    // track keyboard, mouse, and mouse buttons in seperate thread
+    println!("Hello hello");
+    match event.event_type {
+        EventType::KeyPress(Key::Backspace) => {
+            keyboard::handle_backspace(&mut mut_sys_info);
+        }
+
+        EventType::KeyPress(_) => {
+            keyboard::handle_key_press(&mut mut_sys_info);
+        }
+
+        EventType::ButtonPress(_) => {
+            mouse::handle_button_press(&mut mut_sys_info);
+        }
+
+        EventType::MouseMove {..} => {
+            if mut_sys_info
+                .last_mouse_move
+                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
+            {
+                mouse::handle_mouse_move(&mut mut_sys_info);
+            }
+        }
+
+        EventType::Wheel {..} => {
+            if mut_sys_info
+                .last_wheel_scroll
+                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
+            {
+                mouse::handle_wheel_scroll(&mut mut_sys_info);
+
+            }
+
+        }
+
+        _ => { /* ignore */ }
     }
 }
 
-fn main() {
+fn main() -> Result<(), ListenError> {
     #[cfg(debug_assertions)]
-    println!("DEBUG LOG\n--------------");
+    println!("  DEBUG LOG");
+    println!("--------------");
 
-    let (tx, rx) = mpsc::channel::<SystemEvent>();
-
-    // ==========================
-    // Listener Thread
-    // ==========================
-    let tx_input = tx.clone();
+    let sys_info_input = Arc::clone(&SYSTEM_INFO);
     thread::spawn(move || {
-        listen(move |event| { event_callback(event)}).unwrap();
+        listen(handle_event).unwrap();
+        
     });
 
-    // ==========================
-    // Window Tracker Thread
-    // ==========================
-    let tx_window = tx.clone();
+    // track window switches in different thread
+    let sys_info_window = Arc::clone(&sys_info);
     thread::spawn(move || {
-        loop {
-            if let Ok(active_window) = window::get_active_window() {
-                tx_window.send(SystemEvent::WindowChanged(active_window)).unwrap();
-            }
-            thread::sleep(Duration::from_millis(100));
-        }
+
+        let mut_sys_info = sys_info_window.lock().unwrap();
+
+        window::track_window_switches(&mut mut_sys_info);
+    
     });
 
-    // ==========================
-    // Worker Thread (Owns SystemInfo)
-    // ==========================
-    thread::spawn(move || {
-        let mut sys_info = SystemInfo::new();
-
-        while let Ok(app_event) = rx.recv() {
-            match app_event {
-                SystemEvent::Input(event) => {
-                    match event.event_type {
-
-                        EventType::KeyPress(Key::Backspace) => {
-                            keyboard::handle_backspace(&mut sys_info);
-                            println!("Backspace pressed!");
-                        }
-
-                        EventType::KeyPress(_) => {
-                            keyboard::handle_key_press(&mut sys_info);
-                        }
-
-                        EventType::ButtonPress(_) => {
-                            mouse::handle_button_press(&mut sys_info);
-                        }
-
-                        EventType::MouseMove { .. } => {
-                            if sys_info.last_mouse_move
-                                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
-                            {
-                                mouse::handle_mouse_move(&mut sys_info);
-                            }
-                        }
-
-                        EventType::Wheel { .. } => {
-                            if sys_info.last_wheel_scroll
-                                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
-                            {
-                                mouse::handle_wheel_scroll(&mut sys_info);
-                            }
-                        }
-
-                        _ => {}
-                    }
-                }
-
-                SystemEvent::WindowChanged(new_window) => {
-                    if Some(&new_window) != sys_info.current_window.as_ref() {
-                        sys_info.current_window = Some(new_window);
-                        sys_info.switch_rate += 1;
-                        println!("Switched window!");
-                    }
-                }
-            }
-        }
-    });
-
-    // Keep main alive
-    loop {
-        thread::sleep(Duration::from_secs(1));
-    }
+    loop {}
 }
