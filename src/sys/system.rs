@@ -24,6 +24,7 @@ pub struct SystemInfo {
     pub idle_score: f32,
 
     // Window Switching
+    pub current_window: Option<String>,
     pub switch_rate: i16,
     pub norm_switch: f32,
     pub switch_score: f32,
@@ -53,6 +54,7 @@ impl SystemInfo {
             idle_score: 0.0,
 
             // Window Switching
+            current_window: None,
             switch_rate: 0,
             norm_switch: 0.0,
             switch_score: 0.0,

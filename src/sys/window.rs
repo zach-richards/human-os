@@ -1,43 +1,83 @@
 // window.rs
 
-use std::error::Error;
-
 use x11rb::connection::Connection;
-use x11rb::protocol::xproto::*;
-use x11rb::protocol::Event;
+use x11rb::protocol::xproto::{AtomEnum, ConnectionExt};
 use x11rb::rust_connection::RustConnection;
 
-use crate::sys::system;
+#[derive(Debug)]
+pub enum WindowError {
+    ConnectionError,
+    NoActiveWindow,
+    PropertyError,
+    Utf8Error,
+}
 
-pub fn track_window_switches(sys_info: &mut system::SystemInfo) -> Result<(), Box<dyn Error>> {
-    // Connect to X server
-    let (conn, screen_num) = RustConnection::connect(None)?;
+pub fn get_active_window() -> Result<String, WindowError> {
+    // 1️⃣ Connect to X server
+    let (conn, screen_num) =
+        RustConnection::connect(None).map_err(|_| WindowError::ConnectionError)?;
+
     let screen = &conn.setup().roots[screen_num];
     let root = screen.root;
 
-    // Get atom for _NET_ACTIVE_WINDOW
+    // 2️⃣ Get _NET_ACTIVE_WINDOW atom
     let net_active_atom = conn
-        .intern_atom(false, b"_NET_ACTIVE_WINDOW")?
-        .reply()?
+        .intern_atom(false, b"_NET_ACTIVE_WINDOW")
+        .map_err(|_| WindowError::PropertyError)?
+        .reply()
+        .map_err(|_| WindowError::PropertyError)?
         .atom;
 
-    // Listen for property changes on root window
-    conn.change_window_attributes(
-        root,
-        &ChangeWindowAttributesAux::default()
-            .event_mask(EventMask::PROPERTY_CHANGE),
-    )?;
+    // 3️⃣ Get active window property
+    let active_window = conn
+        .get_property(
+            false,
+            root,
+            net_active_atom,
+            AtomEnum::WINDOW,
+            0,
+            1,
+        )
+        .map_err(|_| WindowError::PropertyError)?
+        .reply()
+        .map_err(|_| WindowError::PropertyError)?;
 
-    conn.flush()?;
+    let window = active_window
+        .value32()
+        .and_then(|mut v| v.next())
+        .ok_or(WindowError::NoActiveWindow)?;
 
-    loop {
-        let event = conn.wait_for_event()?;
+    // 4️⃣ Get _NET_WM_NAME atom
+    let net_wm_name_atom = conn
+        .intern_atom(false, b"_NET_WM_NAME")
+        .map_err(|_| WindowError::PropertyError)?
+        .reply()
+        .map_err(|_| WindowError::PropertyError)?
+        .atom;
 
-        if let Event::PropertyNotify(prop) = event {
-            if prop.atom == net_active_atom {
-                sys_info.switch_rate;
-                println!("Window switched!");
-            }
-        }
-    }
+    let utf8_string_atom = conn
+        .intern_atom(false, b"UTF8_STRING")
+        .map_err(|_| WindowError::PropertyError)?
+        .reply()
+        .map_err(|_| WindowError::PropertyError)?
+        .atom;
+
+    // 5️⃣ Get window title
+    let title_reply = conn
+        .get_property(
+            false,
+            window,
+            net_wm_name_atom,
+            utf8_string_atom,
+            0,
+            u32::MAX,
+        )
+        .map_err(|_| WindowError::PropertyError)?
+        .reply()
+        .map_err(|_| WindowError::PropertyError)?;
+
+    let title = String::from_utf8(title_reply.value)
+        .map_err(|_| WindowError::Utf8Error)?;
+
+    Ok(title)
 }

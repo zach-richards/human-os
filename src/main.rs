@@ -2,87 +2,119 @@
 
 mod sys;
 
-use std::time::{ Duration, Instant };
-use std::sync::{ mpsc, Arc, Mutex };
+use std::sync::{Mutex, mpsc};
 use std::thread;
+use std::time::{Duration, Instant};
 
-use rdev::{ listen, Event, EventType, ListenError, Key };
+use rdev::{listen, Event, EventType, Key};
 use once_cell::sync::Lazy;
 
+use crate::sys::keyboard;
 use crate::sys::mouse;
 use crate::sys::system::SystemInfo;
 use crate::sys::window;
-use crate::sys::keyboard;
 
-// Global Arc<Mutex>
-static SYSTEM_INFO: Lazy<Arc<Mutex<SystemInfo>>> = Lazy::new(|| Arc::new(Mutex::new(SystemInfo::new())));
+static GLOBAL_TX: Lazy<Mutex<Option<mpsc::Sender<SystemEvent>>>> =
+    Lazy::new(|| Mutex::new(None));
 
-// Global sender for rdev callback
-static GLOBAL_TX: Lazy<Mutex<Option<mpsc::Sender<Event>>>> = Lazy::new(|| Mutex::new(None));
-
+// Throttle for mouse movement & wheel
 static THROTTLE: Duration = Duration::from_millis(50);
 
+/// Unified application event
+enum SystemEvent {
+    Input(Event),
+    WindowChanged(String),
+}
+
 fn event_callback(event: Event) {
-    // must be a function pointer, cannot capture variables
     if let Some(tx) = &*GLOBAL_TX.lock().unwrap() {
-        tx.send(event).unwrap();
+        tx.send(SystemEvent::Input(event)).unwrap();
     }
 }
 
 fn main() {
     #[cfg(debug_assertions)]
-    println!("  DEBUG LOG");
-    println!("--------------");
+    println!("DEBUG LOG\n--------------");
 
-    let (tx, rx) = mpsc::channel();
+    let (tx, rx) = mpsc::channel::<SystemEvent>();
 
-    // store sender globally
-    *GLOBAL_TX.lock().unwrap() = Some(tx);
-
-    // listener thread
-    thread::spawn(|| {
-        listen(event_callback).unwrap();
+    // ==========================
+    // Listener Thread
+    // ==========================
+    let tx_input = tx.clone();
+    thread::spawn(move || {
+        listen(move |event| { event_callback(event)}).unwrap();
     });
 
-    // worker thread
-    let sys_info_clone = SYSTEM_INFO.clone();
+    // ==========================
+    // Window Tracker Thread
+    // ==========================
+    let tx_window = tx.clone();
     thread::spawn(move || {
-        while let Ok(event) = rx.recv() {
-            let mut sys_info = sys_info_clone.lock().unwrap();
+        loop {
+            if let Ok(active_window) = window::get_active_window() {
+                tx_window.send(SystemEvent::WindowChanged(active_window)).unwrap();
+            }
+            thread::sleep(Duration::from_millis(100));
+        }
+    });
 
-            match event.event_type {
-                EventType::KeyPress(Key::Backspace) => {
-                    keyboard::handle_backspace(&mut sys_info);
-                    println!("Backspace pressed!");
-                }
-                EventType::KeyPress(_) => keyboard::handle_key_press(&mut sys_info),
-                EventType::ButtonPress(_) => mouse::handle_button_press(&mut sys_info),
-                EventType::MouseMove { .. } => {
-                    if sys_info.last_mouse_move.map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
-                    {
-                        mouse::handle_mouse_move(&mut sys_info);
+    // ==========================
+    // Worker Thread (Owns SystemInfo)
+    // ==========================
+    thread::spawn(move || {
+        let mut sys_info = SystemInfo::new();
+
+        while let Ok(app_event) = rx.recv() {
+            match app_event {
+                SystemEvent::Input(event) => {
+                    match event.event_type {
+
+                        EventType::KeyPress(Key::Backspace) => {
+                            keyboard::handle_backspace(&mut sys_info);
+                            println!("Backspace pressed!");
+                        }
+
+                        EventType::KeyPress(_) => {
+                            keyboard::handle_key_press(&mut sys_info);
+                        }
+
+                        EventType::ButtonPress(_) => {
+                            mouse::handle_button_press(&mut sys_info);
+                        }
+
+                        EventType::MouseMove { .. } => {
+                            if sys_info.last_mouse_move
+                                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
+                            {
+                                mouse::handle_mouse_move(&mut sys_info);
+                            }
+                        }
+
+                        EventType::Wheel { .. } => {
+                            if sys_info.last_wheel_scroll
+                                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
+                            {
+                                mouse::handle_wheel_scroll(&mut sys_info);
+                            }
+                        }
+
+                        _ => {}
                     }
                 }
-                EventType::Wheel { .. } => {
-                    if sys_info.last_wheel_scroll.map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
-                    {
-                        mouse::handle_wheel_scroll(&mut sys_info);
+
+                SystemEvent::WindowChanged(new_window) => {
+                    if Some(&new_window) != sys_info.current_window.as_ref() {
+                        sys_info.current_window = Some(new_window);
+                        sys_info.switch_rate += 1;
+                        println!("Switched window!");
                     }
                 }
-                _ => {}
             }
         }
     });
-/*
-    // track window switches in different thread
-    thread::spawn(move || {
 
-        if let Ok(mut sys_info) = SYSTEM_INFO.lock() {
-            window::track_window_switches(&mut *sys_info).unwrap();
-        }
-
-    });
-*/
+    // Keep main alive
     loop {
         thread::sleep(Duration::from_secs(1));
     }
