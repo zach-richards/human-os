@@ -1,10 +1,21 @@
 // system.rs
 
-use std::time::Instant;
+use std::time::{ Instant, Duration };
+
+use rdev::{ Event, EventType, Key };
+
+use crate::sys::mouse;
+use crate::sys::keyboard;
+use crate::SYSTEM_INFO;
+
+static THROTTLE: Duration = Duration::from_millis(100);
 
 pub struct SystemInfo {
+    // Track Mins
+    pub init_sys_time: Option<Instant>,
+
     // Keyboard Tracking
-    pub kps: i16,
+    pub key_count: i16,
     
     // Backspace
     pub backspace_count: i16,
@@ -15,17 +26,19 @@ pub struct SystemInfo {
 
     // Idle
     pub last_activity: Option<Instant>,
-    pub idle_seconds: i8,
 
     // Window Switching
-    pub switch_rate: i16,
+    pub window_switch_count: i16,
 }
 
 impl SystemInfo {
     pub fn new() -> Self {
         Self {
+            // Track Mins
+            init_sys_time: None,
+
             // Keyboard Tracking
-            kps: 0,
+            key_count: 0,
 
             // Backspace
             backspace_count: 0,
@@ -36,10 +49,50 @@ impl SystemInfo {
 
             // Idle
             last_activity: None,
-            idle_seconds: 0,
 
             // Window Switching
-            switch_rate: 0,
+            window_switch_count: 0,
         }
+    }
+}
+
+pub fn handle_input_event(event: Event) {
+    let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
+
+    // track keyboard, mouse, and mouse buttons in seperate thread
+    match event.event_type {
+        EventType::KeyPress(Key::Backspace) => {
+            keyboard::handle_backspace(&mut mut_sys_info);
+        }
+
+        EventType::KeyPress(_) => {
+            keyboard::handle_key_press(&mut mut_sys_info);
+        }
+
+        EventType::ButtonPress(_) => {
+            mouse::handle_button_press(&mut mut_sys_info);
+        }
+
+        EventType::MouseMove {..} => {
+            if mut_sys_info
+                .last_mouse_move
+                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
+            {
+                mouse::handle_mouse_move(&mut mut_sys_info);
+            }
+        }
+
+        EventType::Wheel {..} => {
+            if mut_sys_info
+                .last_wheel_scroll
+                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
+            {
+                mouse::handle_wheel_scroll(&mut mut_sys_info);
+
+            }
+
+        }
+
+        _ => { /* ignore */ }
     }
 }

@@ -1,74 +1,34 @@
 // main.rs
 
 mod sys;
+mod logic;
 
-use std::time::{ Duration, Instant };
+use std::time::{ Instant };
 use std::sync::{ Arc, Mutex };
 use std::thread;
 
-use rdev::{ listen, Event, EventType, ListenError, Key };
+use rdev::{ listen,  ListenError };
 use once_cell::sync::Lazy;
 
-use crate::sys::mouse;
 use crate::sys::system;
 use crate::sys::window;
-use crate::sys::keyboard;
 
 // create global variable to share across the system
-static SYSTEM_INFO: Lazy<Arc<Mutex<sys::system::SystemInfo>>> =
+static SYSTEM_INFO: Lazy<Arc<Mutex<system::SystemInfo>>> =
     Lazy::new(|| Arc::new(Mutex::new(system::SystemInfo::new())));
 
-static THROTTLE: Duration = Duration::from_millis(100);
-
-fn handle_event(event: Event) {
-    let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
-
-    // track keyboard, mouse, and mouse buttons in seperate thread
-    match event.event_type {
-        EventType::KeyPress(Key::Backspace) => {
-            keyboard::handle_backspace(&mut mut_sys_info);
-        }
-
-        EventType::KeyPress(_) => {
-            keyboard::handle_key_press(&mut mut_sys_info);
-        }
-
-        EventType::ButtonPress(_) => {
-            mouse::handle_button_press(&mut mut_sys_info);
-        }
-
-        EventType::MouseMove {..} => {
-            if mut_sys_info
-                .last_mouse_move
-                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
-            {
-                mouse::handle_mouse_move(&mut mut_sys_info);
-            }
-        }
-
-        EventType::Wheel {..} => {
-            if mut_sys_info
-                .last_wheel_scroll
-                .map_or(true, |t| Instant::now().duration_since(t) >= THROTTLE)
-            {
-                mouse::handle_wheel_scroll(&mut mut_sys_info);
-
-            }
-
-        }
-
-        _ => { /* ignore */ }
-    }
-}
+static COGNITIVE_MODEL: Lazy<Arc<Mutex<logic::CognitiveModel>>> =
+    Lazy::new(|| Arc::new(Mutex::new(logic::CognitiveModel::new())));
 
 fn main() -> Result<(), ListenError> {
-    #[cfg(debug_assertions)]
     println!("  DEBUG LOG");
     println!("--------------");
 
+    SYSTEM_INFO.lock().unwrap().init_sys_time = Some(Instant::now());
+
     thread::spawn(move || {
         
-        listen(handle_event).unwrap();
+        listen(system::handle_input_event).unwrap();
         thread::yield_now();
         
     });
@@ -79,5 +39,12 @@ fn main() -> Result<(), ListenError> {
         window::track_window_switches(sys_info_clone).unwrap();
     });
 
-    loop {}
+    loop {
+        let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
+        let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
+
+        cog_model_clone.update();
+
+        thread::yield_now();
+    }
 }
