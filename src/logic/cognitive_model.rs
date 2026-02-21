@@ -54,14 +54,28 @@ impl CognitiveModel {
         }
     }
 
-    fn calc_score() {
+    fn calc_score() -> f32 {
+        let norm_kps: f32 = min(sys_info.kps / 5.0, 1.0);
+
+        let norm_switch: f32 = min(SwitchRate / 3.0, 1.0);
+        let switch_score: f32 = 1 - norm_switch;
+
+        let idle_ratio: f32 = idle_seconds / 60;
+        let idle_score: f32 = 1 - idle_ratio;
+
+        let backspace_ratio: f32 = sys_info.backspace_count / kps;
+        let norm_backspace: f32 = min(backspace_ratio / 0.25, 1.0);
+        let backspace_score: f32 = 1 - norm_backspace;
+
         FocusScore =
-            (NormKPS * 0.40) + // keystrokes a min (capped at 5 KPS)
+            (norm_kps * 0.40) + // keystrokes a min (capped at 5 KPS)
             (SwitchScore * 0.30) + // amount of switching
             (IdleScore * 0.20) + // idling
             (BackspaceScore * 0.10) // amount of backspacing
     }
 
-    pub fn update() { 
+    pub fn update() {
+        score = calc_score(score);
+        state = FocusState::from_score(score);
     }
 }
