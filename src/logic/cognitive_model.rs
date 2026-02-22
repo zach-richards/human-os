@@ -18,8 +18,12 @@ BackspaceScore = 1 - NormBackspace
 
 */
 
+use std::time::{ Duration, Instant };
 
-enum FocusState {
+use crate::sys::system;
+
+#[derive(Debug)]
+pub enum FocusState {
     Flow,
     Focus,
     Neutral,
@@ -42,45 +46,53 @@ impl FocusState {
 }
 
 pub struct CognitiveModel {
-    score: f32,
-    state: FocusState,
+    pub score: f32,
+    pub state: FocusState,
 }
 
 impl CognitiveModel {
     pub fn new() -> Self {
+        let initial_score = 0.50;
         Self {
-            score: 0.50,
-            state: FocusState::from_score(score);
+            score: initial_score,
+            state: FocusState::from_score(initial_score),
         }
     }
 
-    fn calc_score() -> f32 {
-        let norm_kps: f32 = min(sys_info.kps / 5.0, 1.0);
+    fn calc_score(&self, sys_info: &system::SystemInfo) -> f32 {
+        // Keystrokes per second normalized
+        let norm_kps: f32 = (sys_info.key_count as f32 / 5.0).min(1.0);
 
-        let norm_switch: f32 = min(SwitchRate / 3.0, 1.0);
-        let switch_score: f32 = 1 - norm_switch;
+        // Window switching normalized
+        let norm_switch: f32 = (sys_info.window_switch_count as f32 / 3.0).min(1.0);
+        let switch_score: f32 = 1.0 - norm_switch;
 
-        let idle_ratio: f32 = idle_seconds / 60;
-        let idle_score: f32 = 1 - idle_ratio;
+        // Idle time score
+        let now = Instant::now();
+        let last = sys_info.last_activity.unwrap_or_else(Instant::now);
+        let idle_seconds = sys_info
+            .last_activity
+            .map(|last| now.duration_since(last).as_secs())
+            .unwrap_or(0);
+        let idle_ratio: f32 = (idle_seconds as f32 / 60.0).min(1.0); // cap at 1.0
+        let idle_score: f32 = 1.0 - idle_ratio;
 
-        let backspace_ratio: f32 = sys_info.backspace_count / kps;
-        let norm_backspace: f32 = min(backspace_ratio / 0.25, 1.0);
-        let backspace_score: f32 = 1 - norm_backspace;
+        // Backspace ratio score
+        let backspace_ratio: f32 = sys_info.backspace_count as f32 / sys_info.key_count as f32;
+        let norm_backspace: f32 = (backspace_ratio / 0.25).min(1.0);
+        let backspace_score: f32 = 1.0 - norm_backspace;
 
-        score =
-            (norm_kps * 0.40) + // keystrokes a min (capped at 5 KPS)
-            (switch_score * 0.30) + // amount of switching
-            (idle_score * 0.20) + // idling
-            (backspace_score * 0.10) // amount of backspacing
+        // Weighted sum
+        (norm_kps * 0.40) + (switch_score * 0.30) + (idle_score * 0.20) + (backspace_score * 0.10)
     }
 
-    pub fn update() {
-        score = calc_score(score);
-        state = FocusState::from_score(score);
+    pub fn update(&mut self, sys_info: &system::SystemInfo) {
+        self.score = self.calc_score(sys_info);
+        self.state = FocusState::from_score(self.score);
     }
 
-    pub fn print() {
-        println!("Focus Score: {}", score);
-        println!("Focus State: {}", state);
+    pub fn print(&self) {
+        println!("Focus Score: {:.2}", self.score);
+        println!("Focus State: {:?}\n", self.state);
     }
 }

@@ -3,13 +3,14 @@
 mod sys;
 mod logic;
 
-use std::time::{ Instant };
+use std::time::{ Instant, Duration };
 use std::sync::{ Arc, Mutex };
 use std::thread;
 
 use rdev::{ listen,  ListenError };
 use once_cell::sync::Lazy;
 
+use crate::logic::cognitive_model;
 use crate::sys::system;
 use crate::sys::window;
 
@@ -17,8 +18,8 @@ use crate::sys::window;
 static SYSTEM_INFO: Lazy<Arc<Mutex<system::SystemInfo>>> =
     Lazy::new(|| Arc::new(Mutex::new(system::SystemInfo::new())));
 
-static COGNITIVE_MODEL: Lazy<Arc<Mutex<logic::CognitiveModel>>> =
-    Lazy::new(|| Arc::new(Mutex::new(logic::CognitiveModel::new())));
+static COGNITIVE_MODEL: Lazy<Arc<Mutex<cognitive_model::CognitiveModel>>> =
+    Lazy::new(|| Arc::new(Mutex::new(cognitive_model::CognitiveModel::new())));
 
 fn main() -> Result<(), ListenError> {
     println!("  DEBUG LOG");
@@ -40,11 +41,15 @@ fn main() -> Result<(), ListenError> {
     });
 
     loop {
-        let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
-        let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
+        {
+            let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
+            let mut sys_info_clone = SYSTEM_INFO.lock().unwrap();
 
-        cog_model_clone.update();
+            cog_model_clone.update(&sys_info_clone);
+            sys_info_clone.check_is_min();
+            cog_model_clone.print();
+        }
 
-        thread::yield_now();
+        thread::sleep(Duration::from_secs(1));
     }
 }

@@ -1,3 +1,3 @@
 // mod.rs
 
-mod cognitive_model;
+pub mod cognitive_model;
