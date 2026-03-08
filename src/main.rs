@@ -2,13 +2,14 @@
 
 mod sys;
 mod logic;
+mod ui;
 
 use std::time::{ Instant, Duration };
 use std::sync::{ Arc, Mutex };
 use std::thread;
 
-use gtk;
-use tray_icon::{TrayIconBuilder, menu::Menu, Icon};
+use gtk::prelude::*;
+use tray_icon::{TrayIconBuilder, menu::Menu, icon::Icon};
 use rdev::{ listen,  ListenError };
 use once_cell::sync::Lazy;
 
