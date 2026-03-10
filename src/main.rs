@@ -2,13 +2,12 @@
 
 mod sys;
 mod logic;
+mod ui;
 
 use std::time::{ Instant, Duration };
 use std::sync::{ Arc, Mutex };
 use std::thread;
 
-use gtk::prelude::*;
-use tray_icon::{TrayIconBuilder, menu::Menu, icon::Icon};
 use rdev::{ listen,  ListenError };
 use once_cell::sync::Lazy;
 
@@ -29,6 +28,7 @@ fn main() -> Result<(), ListenError> {
     #[cfg(debug_assertions)]
 =======
 fn main() {
+<<<<<<< HEAD
     gtk::init().expect("Failed to initialize GTK");
     
     let width = 16;
@@ -51,6 +51,8 @@ fn main() {
         .unwrap();
 
 >>>>>>> cfb2e8a (Started implementing rgba tray-icon)
+=======
+>>>>>>> e03d4a8 (Working on tray-icon support and color switching)
     println!("  DEBUG LOG");
     println!("--------------");
 
@@ -90,6 +92,4 @@ fn main() {
             thread::sleep(Duration::from_secs(1));
         }
     });
-
-    gtk::main();
 }

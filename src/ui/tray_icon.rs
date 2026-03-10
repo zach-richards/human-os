@@ -1,3 +1,11 @@
+// tray-icon.rs
+
+const icons: [&str; 22] = [ "../icons/icon0.png", "icons/icon1.png", "icons/icon2.png", "icons/icon3.png",
+"icons/icon4.png", "icons/icon5.png", "icons/icon6.png", "icons/icon7.png", "icons/icon8.png", "icons/icon9.png",
+"icons/icon10.png", "icons/icon11.png", "icons/icon12.png", "icons/icon13.png", "icons/icon14.png",
+"icons/icon15.png", "icons/icon16.png", "icons/icon17.png", "icons/icon18.png", "icons/icon19.png",
+"icons/icon20.png", "icons/icon21.png" ];
+
 use ksni::{Tray, TrayMethods, MenuItem, Icon};
 use ksni::menu::StandardItem;
 use image::GenericImageView;
@@ -63,8 +71,6 @@ impl Tray for MyTray {
 
 #[tokio::main]
 async fn main() {
-    // Load your PNG icon
-    let icons = MyTray::load_icon("white-user-circle.png");
     let tray = MyTray { icon: icons };
 
     // Start the tray
