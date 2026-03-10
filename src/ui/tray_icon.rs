@@ -1,20 +1,18 @@
 // tray-icon.rs
 
-const ICONS_LIST: [&str; 22] = [ "assets/icon0.png", "assets/icon1.png", "assets/icon2.png", "assets/icon3.png",
-"assets/icon4.png", "assets/icon5.png", "assets/icon6.png", "assets/icon7.png", "assets/icon8.png",
-"assets/icon9.png", "assets/icon10.png", "assets/icon11.png", "assets/icon12.png", "assets/icon13.png",
-"assets/icon14.png", "assets/icon15.png", "assets/icon16.png", "assets/icon17.png", "assets/icon18.png",
-"assets/icon19.png", "assets/icon20.png", "assets/icon21.png" ];
-
 use ksni::{Tray, TrayMethods, MenuItem, Icon};
 use ksni::menu::StandardItem;
 use image::{GenericImageView, ImageReader};
 
 use std::fs;
+use std::sync::Mutex;
+
+use crate::logic::cognitive_model::CognitiveModel;
 
 #[derive(Default)]
-struct MyTray {
-    icon: Vec<Icon>,
+pub struct MyTray {
+    pub icon: Vec<Vec<Icon>>,
+    pub frame: Mutex<usize>,
 }
 
 impl MyTray {
@@ -52,7 +50,8 @@ impl Tray for MyTray {
     }
 
     fn icon_pixmap(&self) -> Vec<Icon> {
-        self.icon.clone()
+        let i = *self.frame.lock().unwrap();
+        self.icon[i].clone()
     }
 
     fn menu(&self) -> Vec<MenuItem<Self>> {
@@ -71,24 +70,62 @@ impl Tray for MyTray {
     }
 }
 
+const FRAMES: &[&str] = &[
+    "assets/icon0.png",
+    "assets/icon1.png",
+    "assets/icon2.png",
+    "assets/icon3.png",
+    "assets/icon4.png",
+    "assets/icon5.png",
+    "assets/icon6.png",
+    "assets/icon7.png",
+    "assets/icon8.png",
+    "assets/icon9.png",
+    "assets/icon10.png",
+    "assets/icon11.png",
+    "assets/icon12.png",
+    "assets/icon13.png",
+    "assets/icon14.png",
+    "assets/icon15.png",
+    "assets/icon16.png",
+    "assets/icon17.png",
+    "assets/icon18.png",
+    "assets/icon19.png",
+    "assets/icon20.png",
+    "assets/icon21.png",
+];
+
 #[tokio::main]
-pub async fn start() {
-    let mut i: usize = 0;
+pub async fn start(cog_model_clone: &mut CognitiveModel) {
+    let icons: Vec<Vec<Icon>> = FRAMES
+        .iter()
+        .map(|p| {
+            let icon = MyTray::load_icon(p);
+            icon // must return icon here
+        })
+        .collect();
+
+    let icons: Vec<Vec<Icon>> = FRAMES
+        .iter()
+        .map(|p| MyTray::load_icon(p))
+        .collect();
+
+    let tray = MyTray {
+        icon: icons,
+        frame: Mutex::new(0),
+    };
+
+    let handle = tray.spawn().await.expect("failed to start tray");
+    
+    let i = 0;
 
     loop {
-        let icon = MyTray::load_icon(ICONS_LIST[i]);
-        let tray = MyTray { icon };
+        handle.update(|tray| {
+            // update the frame index inside MyTray
+            let mut frame = tray.frame.lock().unwrap();
+            *frame = (*frame + 1) % tray.icon.len();
 
-        // Start the tray
-        let _handle = tray
-            .spawn()
-            .await
-            .expect("failed to start tray");
-
-        println!("Tray started with custom PNG icon!");
-
-        // Keep running
-        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-        i += 1;
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        });
     }
 }

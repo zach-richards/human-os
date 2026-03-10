@@ -57,5 +57,6 @@ fn main() {
         }
     });
 
-    tray_icon::start();
+    let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
+    tray_icon::start(&cog_model_clone);
 }
