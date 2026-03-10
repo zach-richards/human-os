@@ -2,7 +2,6 @@
 
 mod sys;
 mod logic;
-mod ui;
 
 use std::time::{ Instant, Duration };
 use std::sync::{ Arc, Mutex };
