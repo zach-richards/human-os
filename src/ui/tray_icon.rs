@@ -1,14 +1,16 @@
 // tray-icon.rs
 
-const icons: [&str; 22] = [ "../icons/icon0.png", "icons/icon1.png", "icons/icon2.png", "icons/icon3.png",
-"icons/icon4.png", "icons/icon5.png", "icons/icon6.png", "icons/icon7.png", "icons/icon8.png", "icons/icon9.png",
-"icons/icon10.png", "icons/icon11.png", "icons/icon12.png", "icons/icon13.png", "icons/icon14.png",
-"icons/icon15.png", "icons/icon16.png", "icons/icon17.png", "icons/icon18.png", "icons/icon19.png",
-"icons/icon20.png", "icons/icon21.png" ];
+const ICONS_LIST: [&str; 22] = [ "assets/icon0.png", "assets/icon1.png", "assets/icon2.png", "assets/icon3.png",
+"assets/icon4.png", "assets/icon5.png", "assets/icon6.png", "assets/icon7.png", "assets/icon8.png",
+"assets/icon9.png", "assets/icon10.png", "assets/icon11.png", "assets/icon12.png", "assets/icon13.png",
+"assets/icon14.png", "assets/icon15.png", "assets/icon16.png", "assets/icon17.png", "assets/icon18.png",
+"assets/icon19.png", "assets/icon20.png", "assets/icon21.png" ];
 
 use ksni::{Tray, TrayMethods, MenuItem, Icon};
 use ksni::menu::StandardItem;
-use image::GenericImageView;
+use image::{GenericImageView, ImageReader};
+
+use std::fs;
 
 #[derive(Default)]
 struct MyTray {
@@ -70,19 +72,23 @@ impl Tray for MyTray {
 }
 
 #[tokio::main]
-async fn main() {
-    let tray = MyTray { icon: icons };
+pub async fn start() {
+    let mut i: usize = 0;
 
-    // Start the tray
-    let _handle = tray
-        .spawn()
-        .await
-        .expect("failed to start tray");
-
-    println!("Tray started with custom PNG icon!");
-
-    // Keep running
     loop {
-        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+        let icon = MyTray::load_icon(ICONS_LIST[i]);
+        let tray = MyTray { icon };
+
+        // Start the tray
+        let _handle = tray
+            .spawn()
+            .await
+            .expect("failed to start tray");
+
+        println!("Tray started with custom PNG icon!");
+
+        // Keep running
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        i += 1;
     }
 }

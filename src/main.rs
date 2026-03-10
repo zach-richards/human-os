@@ -11,6 +11,7 @@ use std::thread;
 use rdev::{ listen,  ListenError };
 use once_cell::sync::Lazy;
 
+use crate::ui::tray_icon;
 use crate::logic::cognitive_model;
 use crate::sys::system;
 use crate::sys::window;
@@ -55,4 +56,6 @@ fn main() {
             thread::sleep(Duration::from_secs(1));
         }
     });
+
+    tray_icon::start();
 }
