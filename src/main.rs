@@ -2,13 +2,12 @@
 
 mod sys;
 mod logic;
+mod ui;
 
 use std::time::{ Instant, Duration };
 use std::sync::{ Arc, Mutex };
 use std::thread;
 
-use gtk::prelude::*;
-use tray_icon::{TrayIconBuilder, menu::Menu, icon::Icon};
 use rdev::{ listen,  ListenError };
 use once_cell::sync::Lazy;
 
@@ -24,27 +23,6 @@ static COGNITIVE_MODEL: Lazy<Arc<Mutex<cognitive_model::CognitiveModel>>> =
     Lazy::new(|| Arc::new(Mutex::new(cognitive_model::CognitiveModel::new())));
 
 fn main() {
-    gtk::init().expect("Failed to initialize GTK");
-    
-    let width = 16;
-    let height = 16;
-
-    // Create RGBA buffer
-    let mut rgba = Vec::new();
-
-    for _ in 0..(width * height) {
-        rgba.extend_from_slice(&[255, 0, 0, 255]); // Red, fully opaque
-    }
-
-    let icon = Icon::from_rgba(rgba, width, height).unwrap();
-    let tray_menu = Menu::new();
-    let tray_icon = TrayIconBuilder::new()
-        .with_menu(Box::new(tray_menu))
-        .with_tooltip("system-tray - tray icon library!")
-        .with_icon(icon)
-        .build()
-        .unwrap();
-
     println!("  DEBUG LOG");
     println!("--------------");
 
@@ -77,6 +55,4 @@ fn main() {
             thread::sleep(Duration::from_secs(1));
         }
     });
-
-    gtk::main();
 }
