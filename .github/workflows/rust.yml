@@ -21,17 +21,17 @@ jobs:
         run: cargo build --verbose
 
       - name: Install GTK dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y \
-          libglib2.0-dev \
-          libgtk-3-dev \
-          libayatana-appindicator3-dev \
-          pkg-config
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            libglib2.0-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            pkg-config
 
       - name: Set PKG_CONFIG_PATH
-      run: echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+        run: echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
 
-    - name: Debug pkg-config
-      run: |
-        pkg-config --modversion glib-2.0
+      - name: Debug pkg-config
+        run: |
+          pkg-config --modversion glib-2.0
