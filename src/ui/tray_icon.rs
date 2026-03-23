@@ -1,131 +1,89 @@
-// tray-icon.rs
+use gtk::prelude::*;
+use gtk::{Menu, MenuItem};
+use libappindicator::{AppIndicator, AppIndicatorStatus};
+use image::{DynamicImage, Rgba};
+use image::imageops::FilterType;
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::time::Duration;
+use gtk::glib;
 
-use ksni::{Tray, TrayMethods, MenuItem, Icon};
-use ksni::menu::StandardItem;
-use image::{GenericImageView, ImageReader};
-
-use std::fs;
-use std::sync::Mutex;
-
-use crate::logic::cognitive_model::CognitiveModel;
-
-#[derive(Default)]
-pub struct MyTray {
-    pub icon: Vec<Vec<Icon>>,
-    pub frame: Mutex<usize>,
+// --- Resize an icon ---
+fn resize_icon(img: &DynamicImage, size: u32) -> DynamicImage {
+    img.resize_exact(size, size, FilterType::Lanczos3)
 }
 
-impl MyTray {
-    fn load_icon(path: &str) -> Vec<Icon> {
-        // Load the PNG with the image crate
-        let img = image::open(path).expect("Failed to open icon.png");
+// --- Recolor an icon ---
+fn recolor_icon(path: &str, color: (u8, u8, u8)) -> DynamicImage {
+    let mut img = image::open(path).expect("Failed to load icon");
 
-        // Convert into RGBA32
-        let rgba = img.into_rgba8();
-        let (width, height) = rgba.dimensions();
-        assert_eq!(width, height, "Icon must be square!");
-
-        // Convert RGBA to ARGB (swap bytes)
-        let mut data = rgba.into_vec();
-        for px in data.chunks_exact_mut(4) {
-            // Pixel order RGBA → ARGB for ksni
-            px.rotate_right(1);
+    for pixel in img.as_mut_rgba8().unwrap().pixels_mut() {
+        let alpha = pixel[3];
+        if alpha > 0 {
+            *pixel = Rgba([color.0, color.1, color.2, alpha]);
         }
-
-        vec![Icon {
-            width: width as i32,
-            height: height as i32,
-            data,
-        }]
     }
+
+    img
 }
 
-impl Tray for MyTray {
-    fn id(&self) -> String {
-        "rust_wayland_tray".into()
-    }
-
-    fn title(&self) -> String {
-        "Rust Wayland Tray".into()
-    }
-
-    fn icon_pixmap(&self) -> Vec<Icon> {
-        let i = *self.frame.lock().unwrap();
-        self.icon[i].clone()
-    }
-
-    fn menu(&self) -> Vec<MenuItem<Self>> {
-        vec![
-            MenuItem::Standard(StandardItem {
-                label: "Hello World".into(),
-                activate: Box::new(|_| println!("Hello World clicked!")),
-                ..Default::default()
-            }),
-            MenuItem::Standard(StandardItem {
-                label: "Quit".into(),
-                activate: Box::new(|_| std::process::exit(0)),
-                ..Default::default()
-            }),
-        ]
-    }
+// --- Save icon to persistent path ---
+fn save_icon(img: &DynamicImage) -> String {
+    let path = "/tmp/tray_icon.png"; // persistent file
+    let resized = resize_icon(img, 24); // resize to 24x24
+    resized.save(path).unwrap();
+    path.to_string()
 }
 
-const FRAMES: &[&str] = &[
-    "assets/icon0.png",
-    "assets/icon1.png",
-    "assets/icon2.png",
-    "assets/icon3.png",
-    "assets/icon4.png",
-    "assets/icon5.png",
-    "assets/icon6.png",
-    "assets/icon7.png",
-    "assets/icon8.png",
-    "assets/icon9.png",
-    "assets/icon10.png",
-    "assets/icon11.png",
-    "assets/icon12.png",
-    "assets/icon13.png",
-    "assets/icon14.png",
-    "assets/icon15.png",
-    "assets/icon16.png",
-    "assets/icon17.png",
-    "assets/icon18.png",
-    "assets/icon19.png",
-    "assets/icon20.png",
-    "assets/icon21.png",
-];
+// --- Create AppIndicator ---
+fn create_indicator(icon_path: &str) -> AppIndicator {
+    let mut indicator = AppIndicator::new("my-indicator", icon_path);
+    indicator.set_status(AppIndicatorStatus::Active);
+    indicator
+}
 
-#[tokio::main]
-pub async fn start(cog_model_clone: &mut CognitiveModel) {
-    let icons: Vec<Vec<Icon>> = FRAMES
-        .iter()
-        .map(|p| {
-            let icon = MyTray::load_icon(p);
-            icon // must return icon here
-        })
-        .collect();
+// --- Update icon safely ---
+fn update_icon(indicator: &mut AppIndicator, base_icon: &str, color: (u8, u8, u8)) {
+    let img = recolor_icon(base_icon, color);
+    let path = save_icon(&img);
+    indicator.set_icon(&path);
+}
 
-    let icons: Vec<Vec<Icon>> = FRAMES
-        .iter()
-        .map(|p| MyTray::load_icon(p))
-        .collect();
+fn main() {
+    gtk::init().unwrap();
 
-    let tray = MyTray {
-        icon: icons,
-        frame: Mutex::new(0),
-    };
+    let base_icon = "src/user11.png"; // your base icon path
 
-    let handle = tray.spawn().await.expect("failed to start tray");
-    
-    let i = 0;
+    // --- Wrap AppIndicator for safe mutation ---
+    let mut indicator = Rc::new(RefCell::new(create_indicator(base_icon)));
 
-    loop {
-        handle.update(|tray| {
-            // update the frame index inside MyTray
-            let mut frame = tray.frame.lock().unwrap();
-            *frame = (*frame + 1) % tray.icon.len();
+    // --- Menu setup ---
+    let mut menu = Menu::new();
+    let quit = MenuItem::with_label("Quit");
+    quit.connect_activate(|_| gtk::main_quit());
+    menu.append(&quit);
+    menu.show_all();
 
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-        });
-    }
+    indicator.borrow_mut().set_menu(&mut menu);
+
+    // --- Dynamic color cycle ---
+    let colors = vec![(255, 0, 0), (0, 255, 0), (0, 0, 255)];
+    let idx = Rc::new(RefCell::new(0));
+
+    let indicator_clone = indicator.clone();
+    let idx_clone = idx.clone();
+
+    // --- Timer callback for updating icon ---
+    glib::timeout_add_local(Duration::from_secs(2), move || {
+        let mut ind = indicator_clone.borrow_mut();
+        let mut i = idx_clone.borrow_mut();
+
+        update_icon(&mut ind, base_icon, colors[*i]);
+        *i = (*i + 1) % colors.len();
+
+        glib::Continue(true) // keep timer running
+    });
+
+    // --- Start GTK main loop ---
+    gtk::main();
 }

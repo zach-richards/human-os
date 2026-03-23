@@ -7,9 +7,11 @@ edition = "2024"
 once_cell = "1.21.3"
 rdev = "0.4.6"
 x11rb = "0.13.2"
-ksni = "0.3.3"
 tokio = "1.50.0"
-image = "0.25"
+gtk = "0.15"
+libappindicator = { version = "0.2", package = "libayatana-appindicator" }
+image = "0.25.10"
+tempfile = "3.27.0"
 
 [profile.release]
 opt-level = "z"        # optimize for size (or "s")
