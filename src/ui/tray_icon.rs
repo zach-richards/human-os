@@ -2,14 +2,13 @@
 
 use gtk::prelude::*;
 use gtk::{Menu, MenuItem};
-use libappindicator::{AppIndicator, AppIndicatorStatus};
+use libayatana_appindicator::{AppIndicator, AppIndicatorStatus};
 use image::{DynamicImage, Rgba};
 use image::imageops::FilterType;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::time::Duration;
 use gtk::glib;
-use rand::random;
 
 pub struct TrayIcon {
     pub base_icon: String,
@@ -55,17 +54,21 @@ impl TrayIcon {
         indicator.set_icon(&path);
     }
 
+    fn link_color(&self) {
+     
+    }
+
     pub fn new() -> Self {
         let base_icon = "assets/icons/icon-neutral.png".to_string();
         let indicator = Self::create_indicator(&base_icon);
         Self {
             base_icon,
             indicator: Some(Rc::new(RefCell::new(indicator))),
-            colors: vec![(96, 165, 250),
-                         (52, 211, 153),
-                         (217, 231, 122),
-                         (236, 175, 117),
-                         (248, 113, 113)],
+            colors: vec![(248, 113, 113), // fatigued
+                         (236, 175, 117), // distracted
+                         (217, 231, 122), // neutral
+                         (52, 211, 153), // focused
+                         (96, 165, 250)], // flow
             idx: Rc::new(RefCell::new(0)),
         }
     }
