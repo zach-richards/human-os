@@ -1,3 +1,5 @@
+// tray_icon.rs
+
 use gtk::prelude::*;
 use gtk::{Menu, MenuItem};
 use libappindicator::{AppIndicator, AppIndicatorStatus};
@@ -7,83 +9,101 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::time::Duration;
 use gtk::glib;
+use std::borrow::BorrowMut;
 
-// --- Resize an icon ---
-fn resize_icon(img: &DynamicImage, size: u32) -> DynamicImage {
-    img.resize_exact(size, size, FilterType::Lanczos3)
+pub struct TrayIcon {
+    pub base_icon: String,
+    pub indicator: Option<Rc<RefCell<AppIndicator>>>,
+    pub colors: Vec<(u8, u8, u8)>,
+    pub idx: Rc<RefCell<usize>>,
 }
 
-// --- Recolor an icon ---
-fn recolor_icon(path: &str, color: (u8, u8, u8)) -> DynamicImage {
-    let mut img = image::open(path).expect("Failed to load icon");
+impl TrayIcon {
+    // --- Resize an icon ---
+    fn resize_icon(img: &DynamicImage, size: u32) -> DynamicImage {
+        img.resize_exact(size, size, FilterType::Lanczos3)
+    }
 
-    for pixel in img.as_mut_rgba8().unwrap().pixels_mut() {
-        let alpha = pixel[3];
-        if alpha > 0 {
-            *pixel = Rgba([color.0, color.1, color.2, alpha]);
+    // --- Recolor an icon ---
+    fn recolor_icon(path: String, color: (u8, u8, u8)) -> DynamicImage {
+        let mut img = image::open(path).expect("Failed to load icon");
+
+        for pixel in img.as_mut_rgba8().unwrap().pixels_mut() {
+            let alpha = pixel[3];
+            if alpha > 0 {
+                *pixel = Rgba([color.0, color.1, color.2, alpha]);
+            }
+        }
+
+        img
+    }
+
+    // --- Save icon to persistent path ---
+    fn save_icon(&self, img: &DynamicImage) -> String {
+        let path = "/tmp/tray_icon.png"; // persistent file
+        let resized = Self::resize_icon(img, 24); // resize to 24x24
+        resized.save(path).unwrap();
+        path.to_string()
+    }
+
+    // --- Create AppIndicator ---
+    fn create_indicator(icon_path: String) -> AppIndicator {
+        let mut indicator = AppIndicator::new("my-indicator", icon_path.as_str());
+        indicator.set_status(AppIndicatorStatus::Active);
+        indicator
+    }
+
+    // --- Update icon safely ---
+    fn update_icon(&self, indicator: &mut AppIndicator, base_icon: String, color: (u8, u8, u8)) {
+        let img = Self::recolor_icon(base_icon, color);
+        let path = self.save_icon(&img);
+        indicator.set_icon(&path);
+    }
+
+    pub fn new(&self) -> Self {
+        Self {
+            base_icon: "assets/icons/icon-neutral.png".to_string(),
+            indicator: None,
+            colors: vec![(255, 0, 0), (0, 255, 0), (0, 0, 255)],
+            idx: Rc::new(RefCell::new(0)),
         }
     }
 
-    img
-}
+    pub fn run(&self) {
+        gtk::init().unwrap();
 
-// --- Save icon to persistent path ---
-fn save_icon(img: &DynamicImage) -> String {
-    let path = "/tmp/tray_icon.png"; // persistent file
-    let resized = resize_icon(img, 24); // resize to 24x24
-    resized.save(path).unwrap();
-    path.to_string()
-}
+        self.new();
 
-// --- Create AppIndicator ---
-fn create_indicator(icon_path: &str) -> AppIndicator {
-    let mut indicator = AppIndicator::new("my-indicator", icon_path);
-    indicator.set_status(AppIndicatorStatus::Active);
-    indicator
-}
+        // --- Wrap AppIndicator for safe mutation ---
+        let mut indicator = Rc::new(RefCell::new(Self::create_indicator(self.base_icon)));
 
-// --- Update icon safely ---
-fn update_icon(indicator: &mut AppIndicator, base_icon: &str, color: (u8, u8, u8)) {
-    let img = recolor_icon(base_icon, color);
-    let path = save_icon(&img);
-    indicator.set_icon(&path);
-}
+        // --- Menu setup ---
+        let mut menu = Menu::new();
+        let quit = MenuItem::with_label("Quit");
+        quit.connect_activate(|_| gtk::main_quit());
+        menu.append(&quit);
+        menu.show_all();
 
-fn main() {
-    gtk::init().unwrap();
+        if let idx = &indicator {
+            // borrow the inner AppIndicator mutably
+            let mut idx_borrow = idx.borrow_mut();
+            idx_borrow.set_menu(&menu); // pass &Menu
+        }
 
-    let base_icon = "src/user11.png"; // your base icon path
+        let indicator_clone = self.indicator.clone();
+        let idx_clone = self.idx.clone();
 
-    // --- Wrap AppIndicator for safe mutation ---
-    let mut indicator = Rc::new(RefCell::new(create_indicator(base_icon)));
+        // --- Timer callback for updating icon ---
+        glib::timeout_add_local(Duration::from_secs(2), move || {
+            let mut ind = indicator_clone.borrow_mut();
+            let mut i = idx_clone.borrow_mut();
 
-    // --- Menu setup ---
-    let mut menu = Menu::new();
-    let quit = MenuItem::with_label("Quit");
-    quit.connect_activate(|_| gtk::main_quit());
-    menu.append(&quit);
-    menu.show_all();
+            update_icon(&mut ind, self.base_icon, self.colors[*i]);
+            *i = (*i + 1) % self.colors.len();
 
-    indicator.borrow_mut().set_menu(&mut menu);
+            glib::Continue(true) // keep timer running
+        });
 
-    // --- Dynamic color cycle ---
-    let colors = vec![(255, 0, 0), (0, 255, 0), (0, 0, 255)];
-    let idx = Rc::new(RefCell::new(0));
-
-    let indicator_clone = indicator.clone();
-    let idx_clone = idx.clone();
-
-    // --- Timer callback for updating icon ---
-    glib::timeout_add_local(Duration::from_secs(2), move || {
-        let mut ind = indicator_clone.borrow_mut();
-        let mut i = idx_clone.borrow_mut();
-
-        update_icon(&mut ind, base_icon, colors[*i]);
-        *i = (*i + 1) % colors.len();
-
-        glib::Continue(true) // keep timer running
-    });
-
-    // --- Start GTK main loop ---
-    gtk::main();
+        gtk::main();
+    }
 }
