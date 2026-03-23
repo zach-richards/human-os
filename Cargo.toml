@@ -12,6 +12,7 @@ gtk = "0.15"
 libappindicator = { version = "0.2", package = "libayatana-appindicator" }
 image = "0.25.10"
 tempfile = "3.27.0"
+rand = "0.10"
 
 [profile.release]
 opt-level = "z"        # optimize for size (or "s")

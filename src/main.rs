@@ -11,7 +11,7 @@ use std::thread;
 use rdev::{ listen,  ListenError };
 use once_cell::sync::Lazy;
 
-use crate::ui::tray_icon;
+use crate::ui::tray_icon::TrayIcon;
 use crate::logic::cognitive_model;
 use crate::sys::system;
 use crate::sys::window;
@@ -94,6 +94,10 @@ fn main() {
         }
     });
 
-    let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
-    tray_icon::start(&cog_model_clone);
+    gtk::init().unwrap();
+
+    let tray = TrayIcon::new();
+    tray.run();
+
+    gtk::main();
 }
