@@ -17,15 +17,11 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build
-        run: cargo build --verbose
-
       - name: Install GTK dependencies
         run: |
           sudo apt update
           sudo apt install -y \
             libglib2.0-dev \
-            libgobject-2.0-0 \
             libgtk-3-dev \
             libayatana-appindicator3-dev \
             pkg-config
@@ -33,7 +29,10 @@ jobs:
       - name: Set PKG_CONFIG_PATH
         run: echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
 
-      - name: Debug pkg-config
-        run: |
-          pkg-config --modversion glib-2.0
-          pkg-config --modversion gobject-2.0
+        - name: Verify libraries
+          run: |
+            pkg-config --modversion glib-2.0
+            pkg-config --modversion gobject-2.0
+
+        - name: Build
+          run: cargo build --verbose
