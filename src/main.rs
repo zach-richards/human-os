@@ -25,8 +25,8 @@ static COGNITIVE_MODEL: Lazy<Arc<Mutex<cognitive_model::CognitiveModel>>> =
     Lazy::new(|| Arc::new(Mutex::new(cognitive_model::CognitiveModel::new())));
 
 fn main() {
-    println!("  DEBUG LOG");
-    println!("--------------");
+    // println!("  DEBUG LOG");
+    // println!("--------------");
 
     SYSTEM_INFO.lock().unwrap().init_sys_time = Some(Instant::now());
 
@@ -51,7 +51,7 @@ fn main() {
 
                 cog_model_clone.update(&sys_info_clone);
                 sys_info_clone.check_is_min();
-                cog_model_clone.print();
+                // cog_model_clone.print();
             }
 
             thread::sleep(Duration::from_secs(1));
