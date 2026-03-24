@@ -18,7 +18,7 @@ BackspaceScore = 1 - NormBackspace
 
 */
 
-use std::time::{ Duration, Instant };
+use std::time::Instant;
 
 use crate::sys::system;
 
@@ -69,7 +69,7 @@ impl CognitiveModel {
 
         // Idle time score
         let now = Instant::now();
-        let last = sys_info.last_activity.unwrap_or_else(Instant::now);
+        // let last = sys_info.last_activity.unwrap_or_else(Instant::now);
         let idle_seconds = sys_info
             .last_activity
             .map(|last| now.duration_since(last).as_secs())

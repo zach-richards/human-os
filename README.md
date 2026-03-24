@@ -1,37 +1,89 @@
-## **HumanOS**
-##### An interface between the user and the machine.
+# 🚀 HumanOS
+### *An operating system for your focus*
 
-Whereas a computer operating system manages computer's resources for the user to use efficiently, the HumanOS (Human Operating System) manages  the user's focus and emotions to use the computer more efficiently.
+HumanOS is a lightweight background system that monitors behavioral signals and helps you maintain deep focus through intelligent, non-invasive suggestions.
 
-#### How It Works
+---
 
-Think of this operating system as a normal operating system except you are the hardware.
+## ⚙️ Core Idea
 
-- The CPU is your brain.
-- The RAM is your memory/attention.
-- The Battery is your energy.
+> Your computer manages hardware.  
+> **HumanOS manages your attention.**
 
-It is hard to manage your own resources when you can't always monitor your own focus or energy. That's where HumanOS comes in:
+---
 
-- It tracks your input/context.
-- Makes a digital model of your cognitive state.
-- Makes decisions based on your cognitive state.
-- Sends you a suggestion on how to better manage your state.
-- You choose to take action or not.
-- The system adjusts to your choices.
-
-It is important to note that this software is non-invasive, privacy first (never tracking input, searches, or messages), human-in-the-loop, and rules-based intellect, not AI.
-
-Here's an example:
+## 🔁 System Flow
 
 ```mermaid
-    flowchart TD
-        A[/User Input/] -->
-        B[Update Cognitive Model] -->
-        C[(Cognitive Model)] -->
-        D[Decision Engine] -->
-        E[Send Notification] -->
-        F[/User Response/] -->
-        G[System Adjustement] -->
-        A
+flowchart TD
+    A[User Activity] --> B[Signal Processing]
+    B --> C[Focus Score Engine]
+    C --> D{Above Threshold?}
+    
+    D -->|Yes| E[Idle Monitoring]
+    D -->|No| F[Context Analysis]
+    
+    F --> G[Decision Engine]
+    G --> H[Generate Suggestion]
+    H --> I[System Tray Notification]
+    
+    I --> J{User Response}
+    J -->|Accept| K[Execute Action]
+    J -->|Ignore| L[Log Behavior]
+    
+    K --> M[Update Model]
+    L --> M
+    M --> A
 ```
+
+---
+
+## 🧠 Features
+### 📊 Focus Tracking
+- Keyboard activity (speed, consistency)
+- Mouse movement patterns
+- Window/app switching frequency
+- Idle detection
+
+---
+
+### 🔋 Focus Battery
+- Real-time score (0.0 → 1.0)
+- Mapped to 5 visual states:
+  - 🔴 Distracted
+  - 🟠 Unstable
+  - 🟡 Neutral
+  - 🟢 Focused
+  - 🔵 Flow
+
+---
+
+### 🔔 Smart Suggestions
+- Context-aware (e.g., “Close YouTube?”)
+- Delivered via system tray
+- Designed to be:
+  - Minimal
+  - Optional
+  - Non-annoying
+
+---
+
+### ⚡ Preemptive Intervention
+- Detects decline trends, not just low scores
+- Acts before productivity drops
+
+---
+
+### 🎯 Adaptive Learning
+- Adjusts thresholds based on:
+  - User acceptance rate
+  - Time-of-day patterns
+  - Focus session length
+
+---
+
+### 🔒 Privacy First
+- ❌ No content tracking
+- ❌ No keystroke logging
+- ✅ Only behavioral metadata
+- ✅ Fully local processing
