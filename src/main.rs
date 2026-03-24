@@ -8,8 +8,9 @@ use std::time::{ Instant, Duration };
 use std::sync::{ Arc, Mutex };
 use std::thread;
 
-use rdev::{ listen,  ListenError };
+use rdev::listen;
 use once_cell::sync::Lazy;
+use gtk::glib;
 
 use crate::ui::tray_icon::TrayIcon;
 use crate::logic::cognitive_model;
@@ -97,7 +98,17 @@ fn main() {
     gtk::init().unwrap();
 
     let tray = TrayIcon::new();
-    tray.run();
+    tray.setup();
+
+    glib::timeout_add_local(Duration::from_secs(2), move || {
+        let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
+        let sys_info_clone = SYSTEM_INFO.lock().unwrap();
+
+        cog_model_clone.update(&sys_info_clone);
+        tray.run(cog_model_clone.score);
+
+        glib::Continue(true)
+    });
 
     gtk::main();
 }

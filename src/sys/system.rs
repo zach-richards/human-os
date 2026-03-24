@@ -80,8 +80,13 @@ impl SystemInfo {
             *last_reset += Duration::from_secs(minutes_elapsed * 60);
         }
     }
+<<<<<<< HEAD
 
     #[cfg(debug_assertions)]
+=======
+    
+    /*
+>>>>>>> b84e80f (Release v0.2.0)
     pub fn print(&self) {
         println!("Initial System Time: {:?}", self.init_sys_time);
         println!("Key Count: {}", self.key_count);
@@ -91,6 +96,7 @@ impl SystemInfo {
         println!("Last Activity: {:?}", self.last_activity);
         println!("Window Switch Count: {}\n", self.window_switch_count);
     }
+    */
 }
 
 pub fn handle_input_event(event: Event) {
