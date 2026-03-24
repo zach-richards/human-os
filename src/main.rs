@@ -30,31 +30,6 @@ fn main() -> Result<(), ListenError> {
     #[cfg(debug_assertions)]
 =======
 fn main() {
-<<<<<<< HEAD
-    gtk::init().expect("Failed to initialize GTK");
-    
-    let width = 16;
-    let height = 16;
-
-    // Create RGBA buffer
-    let mut rgba = Vec::new();
-
-    for _ in 0..(width * height) {
-        rgba.extend_from_slice(&[255, 0, 0, 255]); // Red, fully opaque
-    }
-
-    let icon = Icon::from_rgba(rgba, width, height).unwrap();
-    let tray_menu = Menu::new();
-    let tray_icon = TrayIconBuilder::new()
-        .with_menu(Box::new(tray_menu))
-        .with_tooltip("system-tray - tray icon library!")
-        .with_icon(icon)
-        .build()
-        .unwrap();
-
->>>>>>> cfb2e8a (Started implementing rgba tray-icon)
-=======
->>>>>>> e03d4a8 (Working on tray-icon support and color switching)
     println!("  DEBUG LOG");
     println!("--------------");
 
@@ -88,7 +63,7 @@ fn main() {
 
                 cog_model_clone.update(&sys_info_clone);
                 sys_info_clone.check_is_min();
-                cog_model_clone.print();
+                // cog_model_clone.print();
             }
 
             thread::sleep(Duration::from_secs(1));
