@@ -91,8 +91,8 @@ impl CognitiveModel {
         self.state = FocusState::from_score(self.score);
     }
 
-    pub fn print(&self) {
+    /*pub fn print(&self) {
         println!("Focus Score: {:.2}", self.score);
         println!("Focus State: {:?}\n", self.state);
-    }
+    }*/
 }
