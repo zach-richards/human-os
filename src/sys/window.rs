@@ -40,7 +40,7 @@ pub fn track_window_switches(sys_info: &Lazy<Arc<Mutex<system::SystemInfo>>>) ->
             if prop.atom == net_active_atom {
                 let mut sys_info_lock = sys_info.lock().unwrap();
                 sys_info_lock.window_switch_count += 1;
-                println!("Window switched!");
+                // println!("Window switched!");
             }
         }
         thread::yield_now();

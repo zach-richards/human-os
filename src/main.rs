@@ -71,9 +71,15 @@ fn main() {
     });
 
     gtk::init().unwrap();
-
+    
     let tray = TrayIcon::new();
-    tray.setup();
+    {
+        let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
+        let sys_info_clone = SYSTEM_INFO.lock().unwrap();
+        cog_model_clone.update(&sys_info_clone);
+        
+        tray.setup(cog_model_clone.score);
+    }
 
     glib::timeout_add_local(Duration::from_secs(2), move || {
         let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
