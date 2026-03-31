@@ -81,7 +81,14 @@ impl TrayIcon {
     }
 
     pub fn run(&self, score: f32) {
-        let indicator_clone = self.indicator.clone().unwrap();
+        let indicator_clone = match self.indicator.clone() {
+            Some(i) => i,
+            None => {
+                eprintln!("Indicator not initialized in run()");
+                return;
+            }
+        };
+
         let base_icon = self.base_icon.clone();
         let self_clone = self.clone_for_closure();
 
@@ -108,16 +115,20 @@ pub struct TrayIconForClosure {
 
 impl TrayIconForClosure {
     fn update_icon(&self, indicator: &mut AppIndicator, base_icon: &PathBuf, color: (u8, u8, u8), score: f32) {
-        let mut img = image::open(base_icon).unwrap();
-        for pixel in img.as_mut_rgba8().unwrap().pixels_mut() {
+        let img = image::open(base_icon)
+        .unwrap();
+        let mut rgba = img.to_rgba8();
+
+        for pixel in rgba.pixels_mut() {
             let alpha = pixel[3];
             if alpha > 0 {
                 *pixel = Rgba([color.0, color.1, color.2, alpha]);
             }
         }
+
         let path = format!("/tmp/tray_icon_{}.png", rand::random::<u32>());
         let focus_fuel = format!("Focus Fuel: {}%", (score * 100.0).round());
-        img.save(&path).unwrap();
+        rgba.save(&path).unwrap();
         indicator.set_icon(path.as_str());
         indicator.set_title(&focus_fuel);
     }
