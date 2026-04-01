@@ -1,5 +1,7 @@
 // system.rs
 
+// struct to hold system info and update info.
+
 use std::time::{ Duration, Instant };
 
 use rdev::{ Event, EventType, Key };
@@ -10,48 +12,48 @@ use crate::SYSTEM_INFO;
 
 static THROTTLE: Duration = Duration::from_millis(100);
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SystemInfo {
-    // Track Mins
+    // Track mins
     pub init_sys_time: Option<Instant>,
 
-    // Keyboard Tracking
+    // Keyboard tracking
     pub key_count: i16,
     
     // Backspace
     pub backspace_count: i16,
 
-    // Mouse Tracking
+    // Mouse tracking
     pub last_mouse_move: Option<Instant>,
     pub last_wheel_scroll: Option<Instant>,
 
     // Idle
     pub last_activity: Option<Instant>,
 
-    // Window Switching
+    // Window switching
     pub window_switch_count: i16,
 }
 
 impl SystemInfo {
     pub fn new() -> Self {
         Self {
-            // Track Mins
+            // Track mins
             init_sys_time: None,
 
-            // Keyboard Tracking
+            // Keyboard tracking
             key_count: 0,
 
             // Backspace
             backspace_count: 0,
 
-            // Mouse Tracking
+            // Mouse tracking
             last_mouse_move: None,
             last_wheel_scroll: None,
 
             // Idle
             last_activity: None,
 
-            // Window Switching
+            // Window switching
             window_switch_count: 0,
         }
     }
@@ -79,6 +81,7 @@ impl SystemInfo {
         }
     }
 
+    #[cfg(debug_assertions)]
     pub fn print(&self) {
         println!("Initial System Time: {:?}", self.init_sys_time);
         println!("Key Count: {}", self.key_count);

@@ -18,20 +18,21 @@ use crate::sys::window;
 static SYSTEM_INFO: Lazy<Arc<Mutex<system::SystemInfo>>> =
     Lazy::new(|| Arc::new(Mutex::new(system::SystemInfo::new())));
 
+// holds cognitive focus score
 static COGNITIVE_MODEL: Lazy<Arc<Mutex<cognitive_model::CognitiveModel>>> =
     Lazy::new(|| Arc::new(Mutex::new(cognitive_model::CognitiveModel::new())));
 
 fn main() -> Result<(), ListenError> {
+    #[cfg(debug_assertions)]
     println!("  DEBUG LOG");
     println!("--------------");
 
     SYSTEM_INFO.lock().unwrap().init_sys_time = Some(Instant::now());
 
+    // a thread to handle input event loop
     thread::spawn(move || {
-        
         listen(system::handle_input_event).unwrap();
         thread::yield_now();
-        
     });
 
     // track window switches in different thread
@@ -40,6 +41,7 @@ fn main() -> Result<(), ListenError> {
         window::track_window_switches(sys_info_clone).unwrap();
     });
 
+    // thread to update cog model and sys info
     loop {
         {
             let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
