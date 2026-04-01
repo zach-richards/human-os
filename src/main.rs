@@ -25,25 +25,10 @@ static SYSTEM_INFO: Lazy<Arc<Mutex<system::SystemInfo>>> =
 static COGNITIVE_MODEL: Lazy<Arc<Mutex<cognitive_model::CognitiveModel>>> =
     Lazy::new(|| Arc::new(Mutex::new(cognitive_model::CognitiveModel::new())));
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-fn main() -> Result<(), ListenError> {
-    #[cfg(debug_assertions)]
-=======
-fn main() {
-    println!("  DEBUG LOG");
-    println!("--------------");
-=======
-fn main() {
-    // println!("  DEBUG LOG");
-    // println!("--------------");
-=======
-fn main() -> Result<(), ListenError> {
+fn main() -> Result<(), rdev::ListenError> {
     #[cfg(debug_assertions)]
     println!("  DEBUG LOG");
     println!("--------------");
->>>>>>> 8da3003 (Rebase and start decision engine)
->>>>>>> e6c6e0f (Rebase and start decision engine)
 
     SYSTEM_INFO.lock().unwrap().init_sys_time = Some(Instant::now());
 
@@ -59,32 +44,12 @@ fn main() -> Result<(), ListenError> {
         window::track_window_switches(sys_info_clone).unwrap();
     });
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     // thread to update cog model and sys info
-    loop {
-        {
-            let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
-            let mut sys_info_clone = SYSTEM_INFO.lock().unwrap();
-=======
-=======
->>>>>>> e6c6e0f (Rebase and start decision engine)
-    thread::spawn(|| {
+    thread::spawn(move || {
         loop {
             {
-                let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
-                let mut sys_info_clone = SYSTEM_INFO.lock().unwrap();
-<<<<<<< HEAD
->>>>>>> cfb2e8a (Started implementing rgba tray-icon)
-=======
-=======
-    // thread to update cog model and sys info
-    loop {
-        {
             let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
             let mut sys_info_clone = SYSTEM_INFO.lock().unwrap();
->>>>>>> 8da3003 (Rebase and start decision engine)
->>>>>>> e6c6e0f (Rebase and start decision engine)
 
                 cog_model_clone.update(&sys_info_clone);
                 sys_info_clone.check_is_min();
@@ -117,4 +82,5 @@ fn main() -> Result<(), ListenError> {
     });
 
     gtk::main();
+    Ok(())
 }
