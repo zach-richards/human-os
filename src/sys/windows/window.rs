@@ -9,41 +9,9 @@ use x11rb::connection::Connection;
 use x11rb::protocol::xproto::*;
 use x11rb::protocol::Event;
 use x11rb::rust_connection::RustConnection;
+use active_win_pos_rs::get_active_window;
 
 use crate::sys::system;
-
-pub struct WindowInfo {
-    pub id: u32,
-    pub title: String,
-    pub domain: Option<String>,
-    pub timestamps: Vec<std::time::Instant>,
-}
-
-impl WindowInfo {
-    pub fn new(id: u32, title: String, domain: Option<String>) -> Self {
-        Self {
-            id,
-            title,
-            domain,
-            timestamps: Vec::new(),
-        }
-    }
-
-    pub fn update_timestamp(&mut self) {
-        self.timestamps.push(std::time::Instant::now());
-    }
-
-    pub fn time_spent(&self) -> std::time::Duration {
-        if self.timestamps.len() < 2 {
-            return std::time::Duration::new(0, 0);
-        }
-        let mut total = std::time::Duration::new(0, 0);
-        for i in (1..self.timestamps.len()).step_by(2) {
-            total += self.timestamps[i] - self.timestamps[i - 1];
-        }
-        total
-    }
-}
 
 pub fn track_window_switches(sys_info: &Lazy<Arc<Mutex<system::SystemInfo>>>) -> Result<(), Box<dyn Error>> {
     // Connect to X server

@@ -9,10 +9,10 @@ use rdev::{ Event, EventType, Key };
 use crate::sys::mouse;
 use crate::sys::keyboard;
 use crate::SYSTEM_INFO;
+use crate::sys::windows::window_info::WindowInfo;
 
 static THROTTLE: Duration = Duration::from_millis(100);
 
-#[derive(Debug)]
 pub struct SystemInfo {
     // Track mins
     pub init_sys_time: Option<Instant>,
@@ -96,6 +96,21 @@ impl SystemInfo {
     */
 }
 
+impl std::fmt::Debug for SystemInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SystemInfo")
+            .field("init_sys_time", &self.init_sys_time)
+            .field("key_count", &self.key_count)
+            .field("backspace_count", &self.backspace_count)
+            .field("last_mouse_move", &self.last_mouse_move)
+            .field("last_wheel_scroll", &self.last_wheel_scroll)
+            .field("last_activity", &self.last_activity)
+            .field("windows_count", &self.windows.len())
+            .field("window_switch_count", &self.window_switch_count)
+            .finish()
+    }
+}
+
 pub fn handle_input_event(event: Event) {
     let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
 
@@ -130,7 +145,6 @@ pub fn handle_input_event(event: Event) {
                 mouse::handle_wheel_scroll(&mut mut_sys_info);
 
             }
-
         }
 
         _ => { /* ignore */ }
