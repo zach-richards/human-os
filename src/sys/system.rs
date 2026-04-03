@@ -30,7 +30,8 @@ pub struct SystemInfo {
     // Idle
     pub last_activity: Option<Instant>,
 
-    // Window switching
+    // Windows
+    pub windows: Vec<WindowInfo>,
     pub window_switch_count: i16,
 }
 
@@ -53,7 +54,8 @@ impl SystemInfo {
             // Idle
             last_activity: None,
 
-            // Window switching
+            // Windows
+            windows: Vec::new(),
             window_switch_count: 0,
         }
     }

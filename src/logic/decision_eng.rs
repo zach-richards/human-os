@@ -7,3 +7,10 @@ pub fn choose_focus_action(kps: f32, bps: f32, wps: f32, idle: f32) -> &'static 
 
     scores.into_iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap()).unwrap().0
 }
+
+pub fn run(kps: f32, bps: f32, wps: f32, idle: f32) {
+
+    let action = choose_focus_action(kps, bps, wps, idle);
+    
+    println!("Recommended Action: {}", action);
+}
