@@ -23,6 +23,15 @@ impl WindowInfo {
         }
     }
 
+    pub fn update_title(&mut self, new_title: &str) {
+        self.title = new_title.to_string();
+        self.context = Self::assess_window_context(&self.app_name, new_title);
+    }
+
+    pub fn update_context(&mut self) {
+        self.context = Self::assess_window_context(&self.app_name, &self.title);
+    }
+
     pub fn update_timestamp(&mut self) {
         self.timestamps.push(std::time::Instant::now());
     }
@@ -40,23 +49,5 @@ impl WindowInfo {
 
     pub fn assess_window_context(app_name: &str, title: &str) -> String {
         window_context::classify_window_context(app_name, title).to_string()
-    }
-}
-
-// Minimal ActiveWindow placeholder used by insert_window_info.
-// Replace with platform-specific implementation that queries the OS.
-struct ActiveWindow {
-    pub app_name: String,
-    pub title: String,
-    pub process_id: u32,
-    pub window_id: u32,
-}
-
-fn insert_window_info() -> Option<WindowInfo> {
-    if let Ok(win) = get_active_window() {
-        let info = WindowInfo::new(win.window_id, &win.app_name, &win.title);
-        Some(info)
-    } else {
-        None
     }
 }
