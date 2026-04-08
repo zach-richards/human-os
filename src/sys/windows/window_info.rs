@@ -1,18 +1,24 @@
 // window_info.rs
 
+use active_win_pos_rs::get_active_window;
+
+use crate::sys::windows::window_context;
+
 pub struct WindowInfo {
-    pub id: u32,
-    pub title: &str,
-    pub context: Option<&str>,
+    pub id: String,
+    pub app_name: String,
+    pub title: String,
+    pub context: String,
     pub timestamps: Vec<std::time::Instant>,
 }
 
 impl WindowInfo {
-    pub fn new(id: u32, title: &str) -> Self {
+    pub fn new(id: String, app_name: &str, title: &str) -> Self {
         Self {
             id,
-            title,
-            context: Some(Self::assess_context(&title)),
+            app_name: app_name.to_string(),
+            title: title.to_string(),
+            context: Self::assess_window_context(app_name, title),
             timestamps: Vec::new(),
         }
     }
@@ -32,20 +38,25 @@ impl WindowInfo {
         total
     }
 
-    pub fn assess_context(&mut self, title: &str) -> &str {
-
-        let context = classify_window(title);
-
-        context
+    pub fn assess_window_context(app_name: &str, title: &str) -> String {
+        window_context::classify_window_context(app_name, title).to_string()
     }
 }
 
-fn insert_window_info() -> WindowInfo {
+// Minimal ActiveWindow placeholder used by insert_window_info.
+// Replace with platform-specific implementation that queries the OS.
+struct ActiveWindow {
+    pub app_name: String,
+    pub title: String,
+    pub process_id: u32,
+    pub window_id: u32,
+}
+
+fn insert_window_info() -> Option<WindowInfo> {
     if let Ok(win) = get_active_window() {
-        WindowInfo::new(win.window_id, &win.title)
-        println!("App: {}", win.app_name);
-        println!("Title: {}", win.title);
-        println!("PID: {}", win.process_id);
-        println!("Window ID: {}", win.window_id);
+        let info = WindowInfo::new(win.window_id, &win.app_name, &win.title);
+        Some(info)
+    } else {
+        None
     }
 }

@@ -13,6 +13,7 @@ libayatana-appindicator = "0.2"
 image = "0.25.10"
 tempfile = "3.27.0"
 rand = "0.10"
+active-win-pos-rs = "0.10.0"
 
 [profile.release]
 opt-level = "z"        # optimize for size (or "s")

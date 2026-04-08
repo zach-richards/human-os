@@ -15,7 +15,7 @@ use gtk::glib;
 use crate::ui::tray_icon::TrayIcon;
 use crate::logic::cognitive_model;
 use crate::sys::system;
-use crate::sys::window;
+use crate::sys::windows::window;
 
 // create global variable to share across the system
 static SYSTEM_INFO: Lazy<Arc<Mutex<system::SystemInfo>>> =
@@ -30,22 +30,22 @@ fn main() -> Result<(), rdev::ListenError> {
     println!("  DEBUG LOG");
     println!("--------------");
 
-    SYSTEM_INFO.lock().unwrap().init_sys_time = Some(Instant::now());
+    SYSTEM_INFO.lock().unwrap().init_sys_time = Some(Instant::now()); // initialize_system_time()
 
     // a thread to handle input event loop
     thread::spawn(move || {
-        listen(system::handle_input_event).unwrap();
+        listen(system::handle_input_event).unwrap(); // start_listening_for_input_loop()
         thread::yield_now();
     });
 
     // track window switches in different thread
     thread::spawn(move || {
-        let sys_info_clone = &SYSTEM_INFO;
+        let sys_info_clone = &SYSTEM_INFO; // start_listening_for_window_switches_loop()
         window::track_window_switches(sys_info_clone).unwrap();
     });
 
     // thread to update cog model and sys info
-    thread::spawn(move || {
+    thread::spawn(move || { // start_cog_model_and_sys_info_update_loop()
         loop {
             {
             let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
@@ -64,14 +64,14 @@ fn main() -> Result<(), rdev::ListenError> {
     
     let tray = TrayIcon::new();
     {
-        let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
+        let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap(); // initialize_tray_icon()
         let sys_info_clone = SYSTEM_INFO.lock().unwrap();
         cog_model_clone.update(&sys_info_clone);
         
         tray.setup(cog_model_clone.score);
     }
 
-    glib::timeout_add_local(Duration::from_secs(2), move || {
+    glib::timeout_add_local(Duration::from_secs(2), move || { // start_tray_icon_update_loop()
         let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
         let sys_info_clone = SYSTEM_INFO.lock().unwrap();
 

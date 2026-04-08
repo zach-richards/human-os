@@ -1,19 +1,20 @@
 // window_context.rs
 
-fn classify_window(title: &str, domain: Option<String>) -> String {
+pub fn classify_window_context<'a>(app_name: &str, title: &str) -> &'a str {
     let title = title.to_lowercase();
+    let app_name = app_name.to_lowercase();
 
-    if title.contains("code") {
+    if title.contains("code") || app_name.contains("code") {
         "coding"
     } else if title.contains("github") {
         "coding"
-    } else if title.contains("libreoffice") || title.contains("word") {
+    } else if app_name.contains("libreoffice") || title.contains("word") {
         "writing"
-    } else if title.contains("docs") {
+    } else if app_name.contains("docs") || title.contains("document") || title.contains("docs") {
         "writing"
-    } else if title.contains("terminal") || title.contains("powershell") {
+    } else if app_name.contains("terminal") || app_name.contains("powershell") {
         "coding"
-    } else if title.contains("discord") || title.contains("slack") {
+    } else if title.contains("discord") || title.contains("slack") || title.contains("teams") || title.contains("zoom") {
         "communication"
     } else if title.contains("spotify") || title.contains("music") {
         "music"

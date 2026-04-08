@@ -62,7 +62,7 @@ impl TrayIcon {
         }
     }
 
-    pub fn setup(&self, score: f32) {
+    pub fn setup(&self, score: f32) { // Setup menu and focus fuel text
         let mut menu = Menu::new();
         let quit = MenuItem::with_label("Quit");
         quit.connect_activate(|_| gtk::main_quit());

@@ -9,7 +9,6 @@ use x11rb::connection::Connection;
 use x11rb::protocol::xproto::*;
 use x11rb::protocol::Event;
 use x11rb::rust_connection::RustConnection;
-use active_win_pos_rs::get_active_window;
 
 use crate::sys::system;
 
