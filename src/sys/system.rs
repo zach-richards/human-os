@@ -63,21 +63,16 @@ impl SystemInfo {
     pub fn check_is_min(&mut self) {
         let now = Instant::now();
 
-        // Initialize init_sys_time if it wasn't set
         let last_reset = self.init_sys_time.get_or_insert(now);
 
-        // Calculate elapsed seconds since last reset
         let elapsed = now.duration_since(*last_reset);
 
         // Check if we've crossed a full minute
         if elapsed.as_secs() >= 60 {
-            // Reset counters
             self.key_count = 0;
             self.backspace_count = 0;
             self.window_switch_count = 0;
 
-            // Advance last_reset forward by the number of full minutes elapsed
-            // This ensures that if the function was called late, we don't "lose" minutes
             let minutes_elapsed = elapsed.as_secs() / 60;
             *last_reset += Duration::from_secs(minutes_elapsed * 60);
         }
@@ -122,6 +117,7 @@ pub fn handle_input_event(event: Event) {
 
         EventType::KeyPress(_) => {
             keyboard::handle_key_press(&mut mut_sys_info);
+
         }
 
         EventType::ButtonPress(_) => {
@@ -148,5 +144,28 @@ pub fn handle_input_event(event: Event) {
         }
 
         _ => { /* ignore */ }
+
+    }
+}
+
+pub fn track_window_info() {
+    let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
+    let Ok(win) = get_active_window() else {
+        return;
+    };
+
+    for window in &mut mut_sys_info.windows {
+        if window.id == win.window_id {
+            window.update_title
+            window.update_timestamp();
+            return;
+        }
+     }
+    }
+
+    if let Some(existing_window) = mut_sys_info.windows.iter().find(|w| w.id == window_info.id) {
+        println!("Window already exists: {:?}", existing_window);
+    } else {
+        println!("New window detected: {:?}", window_info);
     }
 }

@@ -40,7 +40,6 @@ impl Notification {
             });
             app.add_action(&dismiss);
 
-            // Button that fires the notification
             let button = Button::with_label("Send Notification");
             let app_clone = app.clone();
             button.connect_clicked(move |_| {

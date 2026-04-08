@@ -25,27 +25,28 @@ static SYSTEM_INFO: Lazy<Arc<Mutex<system::SystemInfo>>> =
 static COGNITIVE_MODEL: Lazy<Arc<Mutex<cognitive_model::CognitiveModel>>> =
     Lazy::new(|| Arc::new(Mutex::new(cognitive_model::CognitiveModel::new())));
 
-fn main() -> Result<(), rdev::ListenError> {
-    #[cfg(debug_assertions)]
-    println!("  DEBUG LOG");
-    println!("--------------");
+fn initialize_system_time() {
+    let mut sys_info = SYSTEM_INFO.lock().unwrap();
+    sys_info.init_sys_time = Some(Instant::now());
+}
 
-    SYSTEM_INFO.lock().unwrap().init_sys_time = Some(Instant::now()); // initialize_system_time()
-
-    // a thread to handle input event loop
+fn start_system_info_update_loop() {
     thread::spawn(move || {
-        listen(system::handle_input_event).unwrap(); // start_listening_for_input_loop()
+        listen(system::handle_input_event).unwrap();
+        listen(system::track_window_info(window_info));
         thread::yield_now();
     });
+}
 
-    // track window switches in different thread
+fn start_listening_for_window_switches_loop() {
     thread::spawn(move || {
         let sys_info_clone = &SYSTEM_INFO; // start_listening_for_window_switches_loop()
         window::track_window_switches(sys_info_clone).unwrap();
     });
+}
 
-    // thread to update cog model and sys info
-    thread::spawn(move || { // start_cog_model_and_sys_info_update_loop()
+fn start_cog_model_and_sys_info_update_loop() {
+    thread::spawn(move || {
         loop {
             {
             let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
@@ -59,9 +60,9 @@ fn main() -> Result<(), rdev::ListenError> {
             thread::sleep(Duration::from_secs(1));
         }
     });
+}
 
-    gtk::init().unwrap();
-    
+fn initialize_tray_icon() -> TrayIcon {
     let tray = TrayIcon::new();
     {
         let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap(); // initialize_tray_icon()
@@ -70,8 +71,11 @@ fn main() -> Result<(), rdev::ListenError> {
         
         tray.setup(cog_model_clone.score);
     }
+    tray
+}
 
-    glib::timeout_add_local(Duration::from_secs(2), move || { // start_tray_icon_update_loop()
+fn start_tray_icon_update_loop(tray: TrayIcon) {
+    glib::timeout_add_local(Duration::from_secs(2), move || {
         let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
         let sys_info_clone = SYSTEM_INFO.lock().unwrap();
 
@@ -80,6 +84,23 @@ fn main() -> Result<(), rdev::ListenError> {
 
         glib::Continue(true)
     });
+}
+
+fn main() -> Result<(), rdev::ListenError> {
+    initialize_system_time();
+
+    start_system_info_update_loop();
+
+    start_listening_for_window_switches_loop();
+
+    start_cog_model_and_sys_info_update_loop();
+
+    // Initialize GTK for tray icon
+    gtk::init().unwrap();
+
+    let tray = initialize_tray_icon();
+
+    start_tray_icon_update_loop(tray);
 
     gtk::main();
     Ok(())

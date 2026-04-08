@@ -16,11 +16,11 @@ pub fn classify_window_context<'a>(app_name: &str, title: &str) -> &'a str {
         "coding"
     } else if title.contains("discord") || title.contains("slack") || title.contains("teams") || title.contains("zoom") {
         "communication"
-    } else if title.contains("spotify") || title.contains("music") {
+    } else if title.contains("spotify") || title.contains("music") || app_name.contains("spotify") {
         "music"
     } else if title.contains("youtube") || title.contains("netflix") || title.contains("reddit") {
         "distraction"
-    } else if title.contains("chrome") || title.contains("firefox") {
+    } else if app_name.contains("chrome") || app_name.contains("firefox") {
         "browser"
     } else if title.contains("explorer") || title.contains("finder") || title.contains("files") {
         "file_management"

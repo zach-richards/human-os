@@ -1,21 +1,18 @@
 // tray_icon.rs
 
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::path::PathBuf;
+
 use gtk::prelude::*;
 use gtk::{Menu, MenuItem};
 use libayatana_appindicator::{AppIndicator, AppIndicatorStatus};
 use image::Rgba;
-// use image::imageops::FilterType;
-use std::rc::Rc;
-use std::cell::RefCell;
-// use std::time::Duration;
-// use gtk::glib;
-use std::path::PathBuf;
 
 pub struct TrayIcon {
     pub base_icon: PathBuf,
     pub indicator: Option<Rc<RefCell<AppIndicator>>>,
     pub colors: Vec<(u8, u8, u8)>,
-    // pub idx: Rc<RefCell<usize>>,
 }
 
 impl TrayIcon {
@@ -58,7 +55,6 @@ impl TrayIcon {
                          (217, 231, 122), // neutral
                          (52, 211, 153), // focused
                          (96, 165, 250)], // flow
-            // idx: Rc::new(RefCell::new(0)),
         }
     }
 
@@ -104,13 +100,11 @@ impl TrayIcon {
 
     fn clone_for_closure(&self) -> TrayIconForClosure {
         TrayIconForClosure {
-            // idx: self.idx.clone(),
         }
     }
 }
 
 pub struct TrayIconForClosure {
-    // pub idx: Rc<RefCell<usize>>,
 }
 
 impl TrayIconForClosure {
