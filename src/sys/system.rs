@@ -170,7 +170,12 @@ pub fn track_window_info() {
             }
             window.update_timestamp();
 
-            if current_window_id.as_ref().map_or(true, |id| id != &window.id) {
+            let is_window_switch = current_window_id
+                .as_ref()
+                .map(|id| !id.is_empty() && id != &window.id)
+                .unwrap_or(false);
+
+            if is_window_switch {
                 mut_sys_info.window_switch_count += 1;
                 println!("window switch detected: {}", mut_sys_info.window_switch_count);
             }
@@ -187,8 +192,12 @@ pub fn track_window_info() {
         last.update_timestamp();
     }
 
-    if current_window_id.as_ref().map_or(true, |id| id != &new_id && 
-        current_window_id.as_ref().map_or(false, |id| id != "")) {
+    let is_window_switch = current_window_id
+        .as_ref()
+        .map(|id| !id.is_empty() && id != &new_id)
+        .unwrap_or(false);
+
+    if is_window_switch {
         mut_sys_info.window_switch_count += 1;
         println!("window switch detected: {}", mut_sys_info.window_switch_count);
     }

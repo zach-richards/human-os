@@ -124,5 +124,6 @@ fn main() -> Result<(), rdev::ListenError> {
     start_decision_engine_loop();
 
     gtk::main();
+    
     Ok(())
 }
