@@ -41,7 +41,7 @@ fn start_window_info_update_loop() {
     thread::spawn(|| {
         loop {
             system::track_window_info();
-            yield_now();
+            thread::sleep(Duration::from_millis(100));
         }
     });
 }
@@ -87,6 +87,24 @@ fn start_tray_icon_update_loop(tray: TrayIcon) {
     });
 }
 
+fn start_decision_engine_loop() {
+    thread::spawn(move || {
+        loop {
+            {
+                let sys_info_clone = SYSTEM_INFO.lock().unwrap();
+                logic::decision_eng::run(
+                    sys_info_clone.key_count,
+                    sys_info_clone.backspace_count,
+                    sys_info_clone.window_switch_count,
+                    sys_info_clone.last_activity.map(|t| Instant::now().duration_since(t).as_secs() as i16).unwrap_or(0),
+                );
+            }
+
+            thread::sleep(Duration::from_secs(5));
+        }
+    });
+}
+
 fn main() -> Result<(), rdev::ListenError> {
     initialize_system_time();
 
@@ -102,6 +120,8 @@ fn main() -> Result<(), rdev::ListenError> {
     let tray = initialize_tray_icon();
 
     start_tray_icon_update_loop(tray);
+
+    start_decision_engine_loop();
 
     gtk::main();
     Ok(())

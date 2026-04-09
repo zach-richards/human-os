@@ -1,7 +1,5 @@
 // window_info.rs
 
-use active_win_pos_rs::get_active_window;
-
 use crate::sys::windows::window_context;
 
 pub struct WindowInfo {
@@ -36,7 +34,7 @@ impl WindowInfo {
         self.timestamps.push(std::time::Instant::now());
     }
 
-    pub fn time_spent(&self) -> std::time::Duration {
+    /*pub fn time_spent(&self) -> std::time::Duration {
         if self.timestamps.len() < 2 {
             return std::time::Duration::new(0, 0);
         }
@@ -45,7 +43,7 @@ impl WindowInfo {
             total += self.timestamps[i] - self.timestamps[i - 1];
         }
         total
-    }
+    }*/
 
     pub fn assess_window_context(app_name: &str, title: &str) -> String {
         window_context::classify_window_context(app_name, title).to_string()

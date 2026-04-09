@@ -187,7 +187,8 @@ pub fn track_window_info() {
         last.update_timestamp();
     }
 
-    if current_window_id.as_ref().map_or(true, |id| id != &new_id) {
+    if current_window_id.as_ref().map_or(true, |id| id != &new_id && 
+        current_window_id.as_ref().map_or(false, |id| id != "")) {
         mut_sys_info.window_switch_count += 1;
         println!("window switch detected: {}", mut_sys_info.window_switch_count);
     }
