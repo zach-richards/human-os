@@ -100,7 +100,7 @@ fn start_decision_engine_loop() {
                 );
             }
 
-            thread::sleep(Duration::from_secs(5));
+            thread::sleep(Duration::from_secs(30));
         }
     });
 }
@@ -124,6 +124,6 @@ fn main() -> Result<(), rdev::ListenError> {
     start_decision_engine_loop();
 
     gtk::main();
-    
+
     Ok(())
 }
