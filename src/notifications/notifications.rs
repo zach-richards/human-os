@@ -1,10 +1,14 @@
 // notifications.rs
 
-use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, Button};
-use glib::clone;
+use gtk::{glib, prelude::*};
+use gtk::Application;
+use std::sync::OnceLock;
 
-const APP_ID: &str = "com.example.NotificationApp";
+static GTK_APP: OnceLock<Application> = OnceLock::new();
+
+pub fn set_gtk_app(app: Application) {
+    let _ = GTK_APP.set(app);
+}
 
 pub struct Notification {
     pub label: &'static str,
@@ -24,45 +28,22 @@ impl Notification {
     }
 
     pub fn send(&self) {
-        let app = Application::builder()
-            .application_id(APP_ID)
-            .build();
+        let label = self.label;
+        let description = self.description;
+        let option1 = self.option1;
+        let option2 = self.option2;
 
-        app.connect_activate(clone!(@weak app => move |_| {
-            // Register actions
-            let close_tab = gtk::gio::SimpleAction::new("close-tab", None);
-            close_tab.connect_activate(|_, _| {
-                println!("Closing tab!");
-            });
-            app.add_action(&close_tab);
-
-            let dismiss = gtk::gio::SimpleAction::new("dismiss", None);
-            dismiss.connect_activate(|_, _| {
-                println!("Dismissed");
-            });
-            app.add_action(&dismiss);
-
-            let button = Button::with_label("Send Notification");
-            let app_clone = app.clone();
-            button.connect_clicked(move |_| {
-                let notification = gtk::gio::Notification::new("Focus Session");
-                notification.set_body(Some("Your focus fuel is low!"));
-                notification.add_button("Close Tab", "app.close-tab");
-                notification.add_button("Dismiss", "app.dismiss");
-                app_clone.send_notification(Some("focus-alert"), &notification);
-            });
-
-            let window = ApplicationWindow::builder()
-                .application(&app)
-                .title("Notify Test")
-                .default_width(200)
-                .default_height(100)
-                .child(&button)
-                .build();
-
-            window.show_all();
-        }));
-
-        app.run();
+        // Dispatch the notification send on the main thread
+        glib::idle_add_local_once(move || {
+            if let Some(app) = GTK_APP.get() {
+                let notification = gtk::gio::Notification::new(label);
+                notification.set_body(Some(description));
+                notification.add_button(option1, "app.close-tab");
+                notification.add_button(option2, "app.dismiss");
+                app.send_notification(Some("focus-alert"), &notification);
+            } else {
+                eprintln!("GTK Application not initialized for sending notifications");
+            }
+        });
     }
 }

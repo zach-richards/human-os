@@ -91,6 +91,8 @@ fn start_tray_icon_update_loop(tray: TrayIcon) {
 fn start_decision_engine_loop() {
     thread::spawn(move || {
         loop {
+            thread::sleep(Duration::from_secs(30));
+
             let (key_count, backspace_count, window_switch_count, idle_secs) = {
                 let sys_info_clone = SYSTEM_INFO.lock().unwrap();
                 (
@@ -104,8 +106,6 @@ fn start_decision_engine_loop() {
             };
 
             logic::decision_eng::run(key_count, backspace_count, window_switch_count, idle_secs);
-
-            thread::sleep(Duration::from_secs(30));
         }
     });
 }
@@ -121,6 +121,27 @@ fn main() -> Result<(), rdev::ListenError> {
 
     // Initialize GTK for tray icon
     gtk::init().unwrap();
+
+    // Create and initialize GTK Application for notifications
+    let app = gtk::Application::builder()
+        .application_id("com.human-os.app")
+        .build();
+
+    // Register actions for notifications
+    let close_tab_action = gtk::gio::SimpleAction::new("close-tab", None);
+    close_tab_action.connect_activate(|_, _| {
+        println!("Close tab action triggered");
+    });
+    app.add_action(&close_tab_action);
+
+    let dismiss_action = gtk::gio::SimpleAction::new("dismiss", None);
+    dismiss_action.connect_activate(|_, _| {
+        println!("Dismiss action triggered");
+    });
+    app.add_action(&dismiss_action);
+
+    // Set the application in the notifications module
+    notifications::notifications::set_gtk_app(app.clone());
 
     let tray = initialize_tray_icon();
 

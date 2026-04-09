@@ -1,6 +1,6 @@
 // decision_eng.rs
 
-use crate::{logic::actions, notifications::notifications::Notification};
+use crate::logic::actions;
 
 pub fn choose_focus_action(kps: i16, bps: i16, wps: i16, idle: i16) -> &'static str {
     let mut scores: std::collections::HashMap<&str, i16> = std::collections::HashMap::new();

@@ -53,9 +53,8 @@ pub fn close_tab() {
         let action_label = format!("Close {}", tab_title);
         let notification = Notification::new(
             "Focus Alert",
-            &message,
-            &action_label,
-            gtk::gio::SimpleAction::new("close-tab", None),
+            Box::leak(message.into_boxed_str()),
+            Box::leak(action_label.into_boxed_str()),
             "Dismiss"
         );
         notification.send();
