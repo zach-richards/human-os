@@ -3,6 +3,7 @@
 mod sys;
 mod logic;
 mod ui;
+mod notifications;
 
 use std::time::{ Instant, Duration };
 use std::sync::{ Arc, Mutex };
@@ -90,15 +91,19 @@ fn start_tray_icon_update_loop(tray: TrayIcon) {
 fn start_decision_engine_loop() {
     thread::spawn(move || {
         loop {
-            {
+            let (key_count, backspace_count, window_switch_count, idle_secs) = {
                 let sys_info_clone = SYSTEM_INFO.lock().unwrap();
-                logic::decision_eng::run(
+                (
                     sys_info_clone.key_count,
                     sys_info_clone.backspace_count,
                     sys_info_clone.window_switch_count,
-                    sys_info_clone.last_activity.map(|t| Instant::now().duration_since(t).as_secs() as i16).unwrap_or(0),
-                );
-            }
+                    sys_info_clone.last_activity
+                        .map(|t| Instant::now().duration_since(t).as_secs() as i16)
+                        .unwrap_or(0),
+                )
+            };
+
+            logic::decision_eng::run(key_count, backspace_count, window_switch_count, idle_secs);
 
             thread::sleep(Duration::from_secs(30));
         }

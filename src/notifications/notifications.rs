@@ -1,12 +1,20 @@
+// notifications.rs
+
+use gtk::prelude::*;
+use gtk::{Application, ApplicationWindow, Button};
+use glib::clone;
+
+const APP_ID: &str = "com.example.NotificationApp";
+
 pub struct Notification {
-    pub label: &str,
-    pub description: &str,
-    pub option1: &str,
-    pub option2: &str,
+    pub label: &'static str,
+    pub description: &'static str,
+    pub option1: &'static str,
+    pub option2: &'static str,
 }
 
 impl Notification {
-    pub fn new(label: &str, description: &str, option1: &str, option2: &str) -> Self {
+    pub fn new(label: &'static str, description: &'static str, option1: &'static str, option2: &'static str) -> Self {
         Self {
             label,
             description,
@@ -16,23 +24,17 @@ impl Notification {
     }
 
     pub fn send(&self) {
-        // Placeholder for sending the notification
-        println!("Notification: {}", self.label);
-        println!("Description: {}", self.description);
-        println!("Option 1: {}", self.option1);
-        println!("Option 2: {}", self.option2);
-
         let app = Application::builder()
             .application_id(APP_ID)
             .build();
 
-        app.connect_activate(|app| {
+        app.connect_activate(clone!(@weak app => move |_| {
             // Register actions
-            let take_break = gtk::gio::SimpleAction::new("take-break", None);
-            take_break.connect_activate(|_, _| {
-                println!("Taking a break!");
+            let close_tab = gtk::gio::SimpleAction::new("close-tab", None);
+            close_tab.connect_activate(|_, _| {
+                println!("Closing tab!");
             });
-            app.add_action(&take_break);
+            app.add_action(&close_tab);
 
             let dismiss = gtk::gio::SimpleAction::new("dismiss", None);
             dismiss.connect_activate(|_, _| {
@@ -45,13 +47,13 @@ impl Notification {
             button.connect_clicked(move |_| {
                 let notification = gtk::gio::Notification::new("Focus Session");
                 notification.set_body(Some("Your focus fuel is low!"));
-                notification.add_button("Take a Break", "app.take-break");
+                notification.add_button("Close Tab", "app.close-tab");
                 notification.add_button("Dismiss", "app.dismiss");
                 app_clone.send_notification(Some("focus-alert"), &notification);
             });
 
             let window = ApplicationWindow::builder()
-                .application(app)
+                .application(&app)
                 .title("Notify Test")
                 .default_width(200)
                 .default_height(100)
@@ -59,7 +61,7 @@ impl Notification {
                 .build();
 
             window.show_all();
-        });
+        }));
 
         app.run();
     }
