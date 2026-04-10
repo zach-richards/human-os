@@ -81,7 +81,7 @@ impl SystemInfo {
         }
     }
     
-    pub fn print(&self) {
+    /*pub fn print(&self) {
         println!("Initial System Time: {:?}", self.init_sys_time);
         println!("Key Count: {}", self.key_count);
         println!("Backspace Count: {}", self.backspace_count);
@@ -89,7 +89,7 @@ impl SystemInfo {
         println!("Last Wheel Scroll: {:?}", self.last_wheel_scroll);
         println!("Last Activity: {:?}", self.last_activity);
         println!("Window Switch Count: {}\n", self.window_switch_count);
-    }
+    }*/
 }
 
 impl std::fmt::Debug for SystemInfo {
