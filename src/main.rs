@@ -52,8 +52,8 @@ fn start_cog_model_and_sys_info_update_loop() {
     thread::spawn(move || {
         loop {
             {
-            let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
-            let mut sys_info_clone = SYSTEM_INFO.lock().unwrap();
+                let mut cog_model_clone = COGNITIVE_MODEL.lock().unwrap();
+                let mut sys_info_clone = SYSTEM_INFO.lock().unwrap();
 
                 cog_model_clone.update(&sys_info_clone);
                 sys_info_clone.check_is_min();

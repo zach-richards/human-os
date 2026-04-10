@@ -80,7 +80,7 @@ impl SystemInfo {
             *last_reset += Duration::from_secs(minutes_elapsed * 60);
         }
     }
-    
+
     /*pub fn print(&self) {
         println!("Initial System Time: {:?}", self.init_sys_time);
         println!("Key Count: {}", self.key_count);
@@ -92,7 +92,7 @@ impl SystemInfo {
     }*/
 }
 
-impl std::fmt::Debug for SystemInfo {
+/*impl std::fmt::Debug for SystemInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SystemInfo")
             .field("init_sys_time", &self.init_sys_time)
@@ -105,7 +105,7 @@ impl std::fmt::Debug for SystemInfo {
             .field("window_switch_count", &self.window_switch_count)
             .finish()
     }
-}
+}*/
 
 pub fn handle_input_event(event: Event) {
     let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
