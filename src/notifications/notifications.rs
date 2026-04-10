@@ -1,13 +1,16 @@
 // notifications.rs
 
 use gtk::{glib, prelude::*};
-use gtk::Application;
-use std::sync::OnceLock;
+use std::cell::RefCell;
 
-static GTK_APP: OnceLock<Application> = OnceLock::new();
+thread_local! {
+    static GTK_APP: RefCell<Option<gtk::gio::Application>> = RefCell::new(None);
+}
 
-pub fn set_gtk_app(app: Application) {
-    let _ = GTK_APP.set(app);
+pub fn set_gtk_app(app: gtk::gio::Application) {
+    GTK_APP.with(|app_ref| {
+        *app_ref.borrow_mut() = Some(app);
+    });
 }
 
 pub struct Notification {
@@ -35,15 +38,17 @@ impl Notification {
 
         // Dispatch the notification send on the main thread
         glib::idle_add_local_once(move || {
-            if let Some(app) = GTK_APP.get() {
-                let notification = gtk::gio::Notification::new(label);
-                notification.set_body(Some(description));
-                notification.add_button(option1, "app.close-tab");
-                notification.add_button(option2, "app.dismiss");
-                app.send_notification(Some("focus-alert"), &notification);
-            } else {
-                eprintln!("GTK Application not initialized for sending notifications");
-            }
+            GTK_APP.with(|app_ref| {
+                if let Some(app) = app_ref.borrow().as_ref() {
+                    let notification = gtk::gio::Notification::new(label);
+                    notification.set_body(Some(description));
+                    notification.add_button(option1, "app.close-tab");
+                    notification.add_button(option2, "app.dismiss");
+                    app.send_notification(Some("focus-alert"), &notification);
+                } else {
+                    eprintln!("GTK Application not initialized for sending notifications");
+                }
+            });
         });
     }
 }

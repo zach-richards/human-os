@@ -12,6 +12,7 @@ use std::thread::{self, yield_now};
 use rdev::listen;
 use once_cell::sync::Lazy;
 use gtk::glib;
+use gtk::prelude::*;
 
 use crate::ui::tray_icon::TrayIcon;
 use crate::logic::cognitive_model;
@@ -141,7 +142,7 @@ fn main() -> Result<(), rdev::ListenError> {
     app.add_action(&dismiss_action);
 
     // Set the application in the notifications module
-    notifications::notifications::set_gtk_app(app.clone());
+    notifications::notifications::set_gtk_app(app.clone().upcast());
 
     let tray = initialize_tray_icon();
 
