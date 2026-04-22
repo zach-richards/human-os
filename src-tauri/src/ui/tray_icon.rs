@@ -1,6 +1,8 @@
 use std::path::PathBuf;
-use tauri::{AppHandle, Manager, tray::{TrayIconBuilder, TrayIconEvent}};
+use tauri::{AppHandle, Manager, tray::{TrayIconBuilder, TrayIconEvent}, menu::Menu};
 use image::{Rgba, DynamicImage};
+use tauri::image::Image;
+use std::fs;
 
 pub struct TrayIcon {
     base_icon: PathBuf,
@@ -45,9 +47,11 @@ impl TrayIcon {
 }
 
 pub fn setup_tray(app: &AppHandle) {
+    let menu = Menu::new(app).unwrap();
+
     let tray = TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
-        .menu(&tauri::menu::Menu::new())
+        .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "quit" => app.exit(0),
             _ => {}
@@ -65,8 +69,11 @@ pub fn update_focus_fuel(app: AppHandle, score: f32) {
     let icon_manager = TrayIcon::new();
     let icon_path = icon_manager.generate_colored_icon(score);
 
-    let title = format!("Focus Fuel: {}%", (score * 100.0).round());
+     // 🔥 READ FILE BYTES
+    let bytes = fs::read(&icon_path).expect("failed to read tray icon");
 
-    tray.set_icon(Some(tauri::image::Image::from_path(icon_path).unwrap()));
-    tray.set_tooltip(Some(title));
+    // ⚡ Create Tauri image (YOU MUST provide dimensions if needed)
+    let image = Image::new_owned(bytes, 64, 64);
+
+    tray.set_icon(Some(image));
 }
