@@ -47,7 +47,8 @@ jobs:
           pkg-config --modversion gobject-2.0
 
       - name: Build
-        run: cargo build --verbose
+        working-directory: src-tauri
+        run: cargo build --release
 
       - name: Build Tauri app
         run: npm run tauri build
