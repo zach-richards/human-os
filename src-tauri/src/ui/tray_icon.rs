@@ -63,7 +63,7 @@ pub fn setup_tray(app: &AppHandle) {
 }
 
 #[tauri::command]
-pub fn update_focus_fuel(app: AppHandle, score: f32) {
+pub fn update_focus_fuel(app: &AppHandle, score: f32) {
     let tray = app.tray_by_id("main").unwrap();
 
     let icon_manager = TrayIcon::new();

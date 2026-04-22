@@ -6,24 +6,13 @@ use std::thread;
 
 use once_cell::sync::Lazy;
 use rdev::listen;
+use tauri::tray;
 
 use crate::logic::cognitive_model;
 use crate::logic::decision_eng;
 use crate::sys::system;
-
-// =========================
-// GLOBAL STATE
-// =========================
-
-pub static SYSTEM_INFO: Lazy<Arc<Mutex<system::SystemInfo>>> =
-    Lazy::new(|| Arc::new(Mutex::new(system::SystemInfo::new())));
-
-pub static COGNITIVE_MODEL: Lazy<Arc<Mutex<cognitive_model::CognitiveModel>>> =
-    Lazy::new(|| Arc::new(Mutex::new(cognitive_model::CognitiveModel::new())));
-
-// =========================
-// SYSTEM INIT
-// =========================
+use crate::state::{SYSTEM_INFO, COGNITIVE_MODEL};
+use crate::ui::tray_icon;
 
 fn initialize_system_time() {
     SYSTEM_INFO
@@ -32,19 +21,11 @@ fn initialize_system_time() {
         .init_sys_time = Some(Instant::now());
 }
 
-// =========================
-// INPUT TRACKING
-// =========================
-
 fn start_system_input_update_loop() {
     thread::spawn(|| {
         listen(system::handle_input_event).unwrap();
     });
 }
-
-// =========================
-// WINDOW TRACKING
-// =========================
 
 fn start_window_info_update_loop() {
     thread::spawn(|| {
@@ -54,10 +35,6 @@ fn start_window_info_update_loop() {
         }
     });
 }
-
-// =========================
-// COGNITIVE MODEL LOOP
-// =========================
 
 fn start_cognitive_loop() {
     thread::spawn(|| {
@@ -74,10 +51,6 @@ fn start_cognitive_loop() {
         }
     });
 }
-
-// =========================
-// DECISION ENGINE LOOP
-// =========================
 
 fn start_decision_engine_loop() {
     thread::spawn(|| {
@@ -107,23 +80,26 @@ fn start_decision_engine_loop() {
     });
 }
 
-// =========================
-// CORE ENGINE START
-// =========================
+pub fn start_tray_icon_loop(app: &tauri::AppHandle) {
+    let app = app.clone();
 
-pub fn run_engine() {
+    thread::spawn(move || {
+        let score = {
+            let cog_model = COGNITIVE_MODEL.lock().unwrap();
+            cog_model.score
+        }; // 👈 lock released here
+
+        tray_icon::setup_tray(&app);
+        tray_icon::update_focus_fuel(&app, score);
+    });
+}
+
+pub fn run_engine(app: &tauri::AppHandle) {
     initialize_system_time();
 
     start_system_input_update_loop();
     start_window_info_update_loop();
     start_cognitive_loop();
+    start_tray_icon_loop(&app);
     start_decision_engine_loop();
-
-    // IMPORTANT:
-    // No GTK, no blocking GUI loop.
-    // Tauri handles UI lifetime.
 }
-
-// =========================
-// MAIN ENTRY FOR DAEMON MODE
-// =========================

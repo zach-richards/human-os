@@ -1,3 +1,5 @@
+// lib.rs
+
 mod sys;
 mod logic;
 mod notifications;
@@ -5,7 +7,7 @@ mod ui;
 mod engine;
 mod state;
 
-use tauri::Manager;
+use tauri::AppHandle;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -17,20 +19,19 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            let handle: &AppHandle = app.handle();
             // tray
             ui::tray_icon::setup_tray(app.handle());
 
-            // background engine
-            std::thread::spawn(|| {
-                engine::run_engine();
+            let handle = handle.clone();
+
+            std::thread::spawn(move || {
+                engine::run_engine(&handle);
             });
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            greet,
-            ui::tray_icon::update_focus_fuel
-        ])
+        .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
         .expect("error while running tauri app");
 }
