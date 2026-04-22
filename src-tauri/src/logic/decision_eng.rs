@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::logic::intervention::{InterventionType, trigger_intervention};
+use crate::logic::intervention::InterventionType;
 use crate::logic::actions::close_tab::choose_tab_to_close;
 
 pub fn run(kps: i16, bps: i16, wps: i16, idle: i16) -> InterventionType {

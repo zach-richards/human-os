@@ -27,7 +27,7 @@ pub fn trigger_intervention(intervention: InterventionType) {
                 send_close_tab_notification(id, title);
             }
             InterventionType::EnableDnd => {
-                enable_dnd();
+                enable_dnd().unwrap();
             }
             InterventionType::TakeBreak { duration_secs } => {
                 send_break_notification(duration_secs);

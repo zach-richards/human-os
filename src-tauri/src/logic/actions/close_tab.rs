@@ -40,7 +40,7 @@ pub fn choose_tab_to_close() -> Option<(String, String)> {
     None
 }
 
-pub fn send_close_tab_notification(_id: String, title: String) {
+pub fn send_close_tab_notification(id: String, title: String) {
         let message = format!("Close \"{}\"?", title);
 
         // spawn so we don't block engine loop
@@ -55,7 +55,11 @@ pub fn send_close_tab_notification(_id: String, title: String) {
             // IMPORTANT:
             // action handling should live inside your Notification::send()
             // NOT here anymore
-            notification.send();
+            let accepted_action = notification.send();
+
+            if accepted_action {
+                close_window_id(&id).unwrap();
+            }
 
             // If you still want auto-close behavior without user action fallback:
             // (optional safety behavior)

@@ -1,6 +1,7 @@
 // dnd.rs
 
-use std::process::Command;
+use std::{process::Command, thread};
+use std::time::Duration;
 
 pub fn enable_dnd() -> Result<(), String> {
     #[cfg(target_os = "linux")]
@@ -19,6 +20,15 @@ pub fn enable_dnd() -> Result<(), String> {
             return Err("Failed to enable DND".into());
         }
     }
+
+    // spawn timer thread
+    thread::spawn(|| {
+        thread::sleep(Duration::from_secs(600)); // 10 minutes
+
+        if let Err(e) = disable_dnd() {
+            eprintln!("Failed to disable DND: {}", e);
+        }
+    });
 
     Ok(())
 }

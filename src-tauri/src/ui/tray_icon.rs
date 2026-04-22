@@ -1,8 +1,9 @@
+// tray_icon.rs
+
 use std::path::PathBuf;
-use tauri::{AppHandle, Manager, tray::{TrayIconBuilder, TrayIconEvent}, menu::Menu};
-use image::{Rgba, DynamicImage};
+use tauri::{AppHandle, tray::TrayIconBuilder, menu::{Menu, MenuItem}};
+use image::Rgba;
 use tauri::image::Image;
-use std::fs;
 
 pub struct TrayIcon {
     base_icon: PathBuf,
@@ -11,7 +12,7 @@ pub struct TrayIcon {
 impl TrayIcon {
     pub fn new() -> Self {
         Self {
-            base_icon: PathBuf::from("assets/icons/icon-neutral.png"),
+            base_icon: PathBuf::from("icons/icon-neutral.png"),
         }
     }
 
@@ -46,34 +47,69 @@ impl TrayIcon {
     }
 }
 
-pub fn setup_tray(app: &AppHandle) {
-    let menu = Menu::new(app).unwrap();
+pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
+    let focus_fuel = MenuItem::new(app, &format!("Focus Fuel 50%"), true, None::<&str>)?;
+    let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
 
-    let tray = TrayIconBuilder::new()
+    let menu = Menu::new(app)?;
+    menu.append(&focus_fuel)?;
+    menu.append(&quit_item)?;
+
+    TrayIconBuilder::with_id("main")
+        .tooltip("TEST TOOLTIP 123")
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
-            "quit" => app.exit(0),
+            "Quit" => app.exit(0),
             _ => {}
         })
-        .build(app)
-        .unwrap();
+        .build(app)?;
 
-    app.manage(tray);
+    Ok(())
 }
 
-#[tauri::command]
-pub fn update_focus_fuel(app: AppHandle, score: f32) {
+pub fn update_focus_fuel(app: &AppHandle, score: f32) -> tauri::Result<()> {
     let tray = app.tray_by_id("main").unwrap();
 
     let icon_manager = TrayIcon::new();
     let icon_path = icon_manager.generate_colored_icon(score);
 
-     // 🔥 READ FILE BYTES
-    let bytes = fs::read(&icon_path).expect("failed to read tray icon");
+    let img = image::open(&icon_path).expect("icon load failed");
 
-    // ⚡ Create Tauri image (YOU MUST provide dimensions if needed)
-    let image = Image::new_owned(bytes, 64, 64);
+    // force RGBA8
+    let rgba = img.to_rgba8();
 
-    tray.set_icon(Some(image));
+    let (width, height) = rgba.dimensions();
+
+    // get raw pixel buffer
+    let bytes = rgba.into_raw();
+
+    let image = Image::new_owned(bytes, width, height);
+
+    tray.set_icon(Some(image)).unwrap();
+
+    // 1. create new menu
+    let menu = Menu::new(app)?;
+
+    // 2. dynamic item
+    let focus_item = MenuItem::new(
+        app,
+        format!("Focus Fuel: {}%", (score * 100.0).round() as i8),
+        true,
+        None::<&str>,
+    )?;
+
+    let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
+
+    // 3. append items
+    menu.append(&focus_item)?;
+    menu.append(&quit_item)?;
+
+    // 4. get tray
+    let tray = app.tray_by_id("main").unwrap();
+
+    // 5. replace menu
+    tray.set_menu(Some(menu))?;
+
+    Ok(())
 }
