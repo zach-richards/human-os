@@ -1,20 +1,17 @@
 // intervention.rs
 
-use notify_rust::{Notification, Timeout};
 use std::thread;
-use std::process::Command;
 
-use crate::SYSTEM_INFO;
-use crate::logic::actions::close_tab::close_tab;
-use crate::logic::actions::dnd::{enable_dnd, disable_dnd};
+use crate::logic::actions::dnd::enable_dnd;
 use crate::logic::actions::take_break::send_break_notification;
+use crate::logic::actions::close_tab::send_close_tab_notification;
 
 // =========================
 // TYPES
 // =========================
 
 pub enum InterventionType {
-    CloseTab,
+    CloseTab { id: String, title: String },
     EnableDnd,
     TakeBreak { duration_secs: u64 },
 }

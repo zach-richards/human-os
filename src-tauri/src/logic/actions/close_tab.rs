@@ -28,19 +28,19 @@ fn close_window_id(window_id: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn choose_tab_to_close() -> (Option<String>, Option<String>) {
+pub fn choose_tab_to_close() -> Option<(String, String)> {
     let sys_info = SYSTEM_INFO.lock().unwrap_or_else(|e| e.into_inner());
 
     for window in sys_info.windows.iter() {
         if window.context == "distraction" {
-            return (Some(window.id.clone()), Some(window.title.clone()));
+            return Some((window.id.clone(), window.title.clone()));
         }
     }
 
-    (None, None)
+    None
 }
 
-pub fn close_tab(id: String, title: String) {
+pub fn send_close_tab_notification(_id: String, title: String) {
         let message = format!("Close \"{}\"?", title);
 
         // spawn so we don't block engine loop
