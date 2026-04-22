@@ -21,7 +21,7 @@ pub fn run() {
         .setup(|app| {
             let handle: &AppHandle = app.handle();
             // tray
-            ui::tray_icon::setup_tray(app.handle());
+            ui::tray_icon::setup_tray(app.handle()).unwrap();
 
             let handle = handle.clone();
 

@@ -6,6 +6,7 @@ use std::thread;
 use rdev::listen;
 
 use crate::logic::decision_eng;
+use crate::logic::intervention::trigger_intervention;
 use crate::sys::system;
 use crate::state::{SYSTEM_INFO, COGNITIVE_MODEL};
 use crate::ui::tray_icon;
@@ -66,12 +67,14 @@ fn start_decision_engine_loop() {
                 )
             };
 
-            decision_eng::run(
+            let intervention = decision_eng::run(
                 key_count,
                 backspace_count,
                 window_switch_count,
                 idle_secs,
             );
+
+            trigger_intervention(intervention);
         }
     });
 }
@@ -86,7 +89,7 @@ pub fn start_tray_icon_loop(app: &tauri::AppHandle) {
                 cog_model.score
             };
 
-            tray_icon::update_focus_fuel(&app, score);
+            tray_icon::update_focus_fuel(&app, score).unwrap();
 
             thread::sleep(Duration::from_secs(1));
         }
