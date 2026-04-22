@@ -3,7 +3,7 @@
 use std::process::Command;
 use std::thread;
 
-use crate::SYSTEM_INFO;
+use crate::state::SYSTEM_INFO;
 use crate::notifications::notifications::Notification;
 
 fn close_window_id(window_id: &str) -> Result<(), String> {
