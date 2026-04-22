@@ -1,7 +1,7 @@
 // tray_icon.rs
 
 use std::path::PathBuf;
-use tauri::{AppHandle, tray::TrayIconBuilder, menu::Menu};
+use tauri::{AppHandle, tray::TrayIconBuilder, menu::{Menu, MenuItem}};
 use image::Rgba;
 use tauri::image::Image;
 
@@ -47,21 +47,28 @@ impl TrayIcon {
     }
 }
 
-pub fn setup_tray(app: &AppHandle) {
-    let menu = Menu::new(app).unwrap();
+pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
+    let focus_fuel = MenuItem::new(app, &format!("Focus Fuel 50%"), true, None::<&str>)?;
+    let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
 
-    let _tray = TrayIconBuilder::with_id("main")
+    let menu = Menu::new(app)?;
+    menu.append(&focus_fuel)?;
+    menu.append(&quit_item)?;
+
+    TrayIconBuilder::with_id("main")
+        .tooltip("TEST TOOLTIP 123")
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
-            "quit" => app.exit(0),
+            "Quit" => app.exit(0),
             _ => {}
         })
-        .build(app)
-        .unwrap();
+        .build(app)?;
+
+    Ok(())
 }
 
-pub fn update_focus_fuel(app: &AppHandle, score: f32) {
+pub fn update_focus_fuel(app: &AppHandle, score: f32) -> tauri::Result<()> {
     let tray = app.tray_by_id("main").unwrap();
 
     let icon_manager = TrayIcon::new();
@@ -80,4 +87,29 @@ pub fn update_focus_fuel(app: &AppHandle, score: f32) {
     let image = Image::new_owned(bytes, width, height);
 
     tray.set_icon(Some(image)).unwrap();
+
+    // 1. create new menu
+    let menu = Menu::new(app)?;
+
+    // 2. dynamic item
+    let focus_item = MenuItem::new(
+        app,
+        format!("Focus Fuel: {}%", (score * 100.0).round() as i8),
+        true,
+        None::<&str>,
+    )?;
+
+    let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
+
+    // 3. append items
+    menu.append(&focus_item)?;
+    menu.append(&quit_item)?;
+
+    // 4. get tray
+    let tray = app.tray_by_id("main").unwrap();
+
+    // 5. replace menu
+    tray.set_menu(Some(menu))?;
+
+    Ok(())
 }
