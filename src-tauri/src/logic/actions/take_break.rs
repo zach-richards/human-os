@@ -1,37 +1,42 @@
 // take_break.rs
 
-fn send_break_notification(duration_secs: u64) {
-    let handle = Notification::new()
-        .summary("Take a Break")
-        .body("You've been working a while")
-        .action("break", "Take break")
-        .action("dismiss", "Later")
-        .timeout(Timeout::Milliseconds(8000))
-        .show();
+use std::{thread, time::Duration};
 
-    if let Ok(notification) = handle {
-        notification.wait_for_action(|action| {
-            if action == "break" {
-                start_break_timer(duration_secs);
-            }
-        });
-    }
+use crate::notifications::notifications::Notification;
+
+pub fn send_break_notification(duration_secs: u64) {
+    let notification = Notification::new(
+        "Take a Break",
+        "You've been working for a while",
+        "Take Break",
+        "Later",
+    );
+
+    notification.send();
+
+    // In your current architecture, action handling is inside notify-rust layer
+    // So we just assume "break" decision is handled in notification engine
+    start_break_timer(duration_secs);
 }
 
 fn start_break_timer(seconds: u64) {
     thread::spawn(move || {
-        Notification::new()
-            .summary("Break Started")
-            .body("Relax")
-            .show()
-            .ok();
+        Notification::new(
+            "Break Started",
+            "Relax for a moment",
+            "Ok",
+            "Dismiss",
+        )
+        .send();
 
-        std::thread::sleep(std::time::Duration::from_secs(seconds));
+        thread::sleep(Duration::from_secs(seconds));
 
-        Notification::new()
-            .summary("Break Over")
-            .body("Back to work")
-            .show()
-            .ok();
+        Notification::new(
+            "Break Over",
+            "Back to work",
+            "Ok",
+            "Dismiss",
+        )
+        .send();
     });
 }

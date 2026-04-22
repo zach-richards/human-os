@@ -65,7 +65,7 @@ fn start_cognitive_loop() {
         loop {
             {
                 let mut model = COGNITIVE_MODEL.lock().unwrap();
-                let sys = SYSTEM_INFO.lock().unwrap();
+                let mut sys = SYSTEM_INFO.lock().unwrap();
 
                 model.update(&sys);
                 sys.check_is_min();

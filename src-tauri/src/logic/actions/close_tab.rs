@@ -3,9 +3,8 @@
 use std::process::Command;
 use std::thread;
 
-use notify_rust::{Notification as Notify, Timeout};
-
 use crate::SYSTEM_INFO;
+use crate::notifications::notifications::Notification;
 
 fn close_window_id(window_id: &str) -> Result<(), String> {
     if window_id.is_empty() {
@@ -41,49 +40,27 @@ fn choose_tab_to_close() -> (Option<String>, Option<String>) {
     (None, None)
 }
 
-pub fn close_tab() {
-    if let (Some(tab_id), Some(tab_title)) = choose_tab_to_close() {
-        let message = format!("Focus low. Close \"{}\"?", tab_title);
-        let action_label = format!("Close");
+pub fn close_tab(id: String, title: String) {
+        let message = format!("Close \"{}\"?", title);
 
-        // spawn so we don't block your engine loop
+        // spawn so we don't block engine loop
         thread::spawn(move || {
-            let handle = Notify::new()
-                .summary("Focus Alert")
-                .body(&message)
-                .action("close", &action_label)
-                .action("dismiss", "Dismiss")
-                .timeout(Timeout::Milliseconds(8000))
-                .show();
+            let notification = Notification::new(
+                "Focus Alert",
+                Box::leak(message.into_boxed_str()),
+                "Close",
+                "Dismiss",
+            );
 
-            match handle {
-                Ok(notification) => {
-                    notification.wait_for_action(|action| {
-                        match action {
-                            "close" => {
-                                println!("User confirmed closing: {}", tab_title);
+            // IMPORTANT:
+            // action handling should live inside your Notification::send()
+            // NOT here anymore
+            notification.send();
 
-                                match close_window_id(&tab_id) {
-                                    Ok(_) => println!("Closed {}", tab_title),
-                                    Err(e) => eprintln!("Failed to close {}: {}", tab_title, e),
-                                }
-                            }
-                            "dismiss" => {
-                                println!("User dismissed notification");
-                            }
-                            "__closed" => {
-                                println!("Notification closed without action");
-                            }
-                            _ => {}
-                        }
-                    });
-                }
-                Err(e) => {
-                    eprintln!("Failed to send notification: {:?}", e);
-                }
-            }
+            // If you still want auto-close behavior without user action fallback:
+            // (optional safety behavior)
+            println!("Notification sent for tab: {}", title);
+
+            // DO NOT auto-close anymore unless explicitly triggered in notification engine
         });
-    } else {
-        println!("No distracting tabs found.");
-    }
 }

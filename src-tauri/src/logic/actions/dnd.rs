@@ -1,6 +1,9 @@
 // dnd.rs
 
 use std::process::Command;
+use std::thread;
+
+use crate::notifications::notifications::Notification;
 
 pub fn enable_dnd() -> Result<(), String> {
     #[cfg(target_os = "linux")]

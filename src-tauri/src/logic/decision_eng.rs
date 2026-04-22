@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use crate::intervention::{trigger_intervention, InterventionType};
-use crate::intervention::find_distraction_tab;
+use crate::logic::intervention::{trigger_intervention, InterventionType};
+use crate::logic::actions::close_tab::choose_tab_to_close;
 
-pub fn choose_focus_action(kps: i16, bps: i16, wps: i16, idle: i16) -> InterventionType {
+pub fn run(kps: i16, bps: i16, wps: i16, idle: i16) -> InterventionType {
     let mut scores: HashMap<&str, i16> = HashMap::new();
 
     // Scoring logic (same idea, safer routing later)
@@ -21,7 +21,7 @@ pub fn choose_focus_action(kps: i16, bps: i16, wps: i16, idle: i16) -> Intervent
         "Break" => InterventionType::TakeBreak { duration_secs: 300 },
 
         "CloseTabs" => {
-            if let Some((id, title)) = find_distraction_tab() {
+            if let Some((id, title)) = choose_tab_to_close() {
                 InterventionType::CloseTab { id, title }
             } else {
                 InterventionType::TakeBreak { duration_secs: 300 }
