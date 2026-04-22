@@ -1,14 +1,10 @@
 // engine.rs
 
 use std::time::{Instant, Duration};
-use std::sync::{Arc, Mutex};
 use std::thread;
 
-use once_cell::sync::Lazy;
 use rdev::listen;
-use tauri::tray;
 
-use crate::logic::cognitive_model;
 use crate::logic::decision_eng;
 use crate::sys::system;
 use crate::state::{SYSTEM_INFO, COGNITIVE_MODEL};
@@ -84,13 +80,16 @@ pub fn start_tray_icon_loop(app: &tauri::AppHandle) {
     let app = app.clone();
 
     thread::spawn(move || {
-        let score = {
-            let cog_model = COGNITIVE_MODEL.lock().unwrap();
-            cog_model.score
-        }; // 👈 lock released here
+        loop {
+            let score = {
+                let cog_model = COGNITIVE_MODEL.lock().unwrap();
+                cog_model.score
+            };
 
-        tray_icon::setup_tray(&app);
-        tray_icon::update_focus_fuel(&app, score);
+            tray_icon::update_focus_fuel(&app, score);
+
+            thread::sleep(Duration::from_secs(1));
+        }
     });
 }
 
