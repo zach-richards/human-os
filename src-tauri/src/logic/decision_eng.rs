@@ -1,28 +1,35 @@
-// decision_eng.rs
+use std::collections::HashMap;
 
-use crate::logic::actions;
+use crate::logic::intervention::{trigger_intervention, InterventionType};
+use crate::logic::actions::close_tab::choose_tab_to_close;
 
-pub fn choose_focus_action(kps: i16, bps: i16, wps: i16, idle: i16) -> &'static str {
-    let mut scores: std::collections::HashMap<&str, i16> = std::collections::HashMap::new();
+pub fn run(kps: i16, bps: i16, wps: i16, idle: i16) -> InterventionType {
+    let mut scores: HashMap<&str, i16> = HashMap::new();
 
-    scores.insert("Break", idle * 2 + if kps < 2 {1} else {0});
+    // Scoring logic (same idea, safer routing later)
+    scores.insert("Break", idle * 2 + if kps < 2 { 1 } else { 0 });
     scores.insert("CloseTabs", wps * 3);
     scores.insert("DND", bps * 2 + wps);
 
-    scores.into_iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap()).unwrap().0
-}
+    let best = scores
+        .into_iter()
+        .max_by(|a, b| a.1.cmp(&b.1))
+        .unwrap()
+        .0;
 
-pub fn run(kps: i16, bps: i16, wps: i16, idle: i16) {
+    match best {
+        "Break" => InterventionType::TakeBreak { duration_secs: 300 },
 
-    let action = choose_focus_action(kps, bps, wps, idle);
-    
-    println!("Recommended Action: {}", action);
+        "CloseTabs" => {
+            if let Some((id, title)) = choose_tab_to_close() {
+                InterventionType::CloseTab { id, title }
+            } else {
+                InterventionType::TakeBreak { duration_secs: 300 }
+            }
+        }
 
-    if action == "Break" {
-        //logic::actions::break_time::suggest_break();
-    } else if action == "CloseTabs" {
-        actions::close_tab::close_tab();
-    } else if action == "DND" {
-        //logic::actions::dnd_mode::enable_dnd();
+        "DND" => InterventionType::EnableDnd,
+
+        _ => InterventionType::TakeBreak { duration_secs: 300 },
     }
 }
