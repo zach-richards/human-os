@@ -10,6 +10,7 @@ use crate::logic::intervention::trigger_intervention;
 use crate::sys::system;
 use crate::auxillary::state::{SYSTEM_INFO, COGNITIVE_MODEL};
 use crate::ui::tray_icon;
+use crate::communication::rs_sender;
 
 fn initialize_system_time() {
     SYSTEM_INFO
@@ -79,7 +80,7 @@ fn start_decision_engine_loop() {
     });
 }
 
-pub fn start_tray_icon_loop(app: &tauri::AppHandle) {
+pub fn start_ui_loop(app: &tauri::AppHandle) {
     let app = app.clone();
 
     thread::spawn(move || {
@@ -88,8 +89,13 @@ pub fn start_tray_icon_loop(app: &tauri::AppHandle) {
                 let cog_model = COGNITIVE_MODEL.lock().unwrap();
                 cog_model.score
             };
+            let state = {
+                let cog_model = COGNITIVE_MODEL.lock().unwrap();
+                cog_model.state
+            };
 
             tray_icon::update_focus_fuel(&app, score).unwrap();
+            rs_sender::send_state_to_frontend(&app, state);
 
             thread::sleep(Duration::from_secs(1));
         }
@@ -102,6 +108,6 @@ pub fn run_engine(app: &tauri::AppHandle) {
     start_system_input_update_loop();
     start_window_info_update_loop();
     start_cognitive_loop();
-    start_tray_icon_loop(&app);
+    start_ui_loop(&app);
     start_decision_engine_loop();
 }

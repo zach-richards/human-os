@@ -22,7 +22,7 @@ use std::time::Instant;
 
 use crate::sys::system;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum FocusState {
     Flow,
     Focus,

@@ -6,6 +6,7 @@ mod notifications;
 mod ui;
 mod engine;
 mod auxillary;
+mod communication;
 
 use tauri::AppHandle;
 
