@@ -24,7 +24,7 @@ export default function FocusChart() {
 
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ margin: 0, fontSize: 20 }}>Focus Score</h2>
+        <h2 style={{ margin: 0, fontSize: 20, color: "#E4E6EB"}}>Focus Fuel</h2>
         <p style={{ margin: "4px 0 0", color: "#888", fontSize: 14 }}>Last 60 minutes</p>
       </div>
 
@@ -60,22 +60,25 @@ export default function FocusChart() {
 
       {/* Dropdown */}
       <div style={{ marginTop: 20 }}>
-        <label style={{ fontSize: 14, color: "#ddd", display: "block", marginBottom: 6 }}>
+        <label style={{ fontSize: 14, color: "#E4E6EB", display: "block", marginBottom: 6 }}>
           Activity
         </label>
         <select
-          value={activity}
-          onChange={(e) => setActivity(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            borderRadius: 8,
-            border: "1px solid #242526",
-            fontSize: 14,
-            background: "#242526",
-            cursor: "pointer",
-          }}
-        >
+            value={activity}
+            onChange={(e) => setActivity(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid #242526",
+              fontSize: 14,
+              background: "#242526",
+              color: "#E4E6EB",              // 👈 add this
+              appearance: "none",          // 👈 optional
+              cursor: "pointer",
+            }}
+          >
+
           <option value="">Select an activity...</option>
           {activities.map((a) => (
             <option key={a} value={a}>{a}</option>
@@ -85,11 +88,11 @@ export default function FocusChart() {
 
       {/* Selected activity */}
       {activity && (
-        <p style={{ marginTop: 12, fontSize: 14, color: "#ddd" }}>
+        <p style={{ marginTop: 12, fontSize: 14, color: "#E4E6EB" }}>
           Currently tracking: <strong>{activity}</strong>
         </p>
       )}
-
+      
     </div>
   );
 }
