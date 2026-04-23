@@ -8,7 +8,7 @@ use rdev::listen;
 use crate::logic::decision_eng;
 use crate::logic::intervention::trigger_intervention;
 use crate::sys::system;
-use crate::state::{SYSTEM_INFO, COGNITIVE_MODEL};
+use crate::auxillary::state::{SYSTEM_INFO, COGNITIVE_MODEL};
 use crate::ui::tray_icon;
 
 fn initialize_system_time() {

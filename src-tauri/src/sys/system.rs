@@ -9,7 +9,7 @@ use active_win_pos_rs::get_active_window;
 
 use crate::sys::mouse;
 use crate::sys::keyboard;
-use crate::state::SYSTEM_INFO;
+use crate::auxillary::state::SYSTEM_INFO;
 use crate::sys::windows::window_info::*;
 
 static THROTTLE: Duration = Duration::from_millis(100);

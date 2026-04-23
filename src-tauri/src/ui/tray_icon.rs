@@ -1,9 +1,12 @@
 // tray_icon.rs
 
 use std::path::PathBuf;
+
 use tauri::{AppHandle, tray::TrayIconBuilder, menu::{Menu, MenuItem}};
 use image::Rgba;
 use tauri::image::Image;
+
+use crate::auxillary::get_color_from_score::{get_color_from_score};
 
 pub struct TrayIcon {
     base_icon: PathBuf,
@@ -16,23 +19,11 @@ impl TrayIcon {
         }
     }
 
-    fn get_color_from_score(score: f32) -> (u8, u8, u8) {
-        let s = score.clamp(0.0, 1.0);
-
-        match s {
-            s if s <= 0.2 => (248, 113, 113),
-            s if s <= 0.4 => (236, 175, 117),
-            s if s <= 0.6 => (217, 231, 122),
-            s if s <= 0.8 => (52, 211, 153),
-            _ => (96, 165, 250),
-        }
-    }
-
     fn generate_colored_icon(&self, score: f32) -> String {
         let img = image::open(&self.base_icon).expect("icon load failed");
         let mut rgba = img.to_rgba8();
 
-        let color = Self::get_color_from_score(score);
+        let color = get_color_from_score(score);
 
         for px in rgba.pixels_mut() {
             let a = px[3];
