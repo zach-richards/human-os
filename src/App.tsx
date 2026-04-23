@@ -1,50 +1,49 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { GlobalStyles } from "@mui/material";
+
+import Dashboard from "./Dashboard";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
 
   async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     setGreetMsg(await invoke("greet", { name }));
   }
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <>
+      {/* 🎯 Global OS-style root styling */}
+      <GlobalStyles
+        styles={{
+          html: {
+            margin: 0,
+            padding: 0,
+            height: "100%",
+          },
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+          body: {
+            margin: 0,
+            padding: 0,
+            height: "100%",
+            backgroundColor: "#18191A",
+            overflow: "hidden",
+          },
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
+          "#root": {
+            height: "100vh",
+            width: "100vw",
+            backgroundColor: "#18191A",
+            color: "white",
+          },
         }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+      />
+
+      <main style={{ height: "100%" }}>
+        <Dashboard />
+      </main>
+    </>
   );
 }
 

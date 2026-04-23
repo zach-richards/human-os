@@ -11,14 +11,15 @@
   "app": {
     "windows": [
       {
-        "label": "popover",
-        "visible": false,
-        "decorations": false,
-        "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "resizable": false,
-        "width": 200,
-        "height": 120
+        "label": "main",
+        "title": "HumanOS",
+        "visible": true,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "resizable": true,
+        "width": 700,
+        "height": 500
       }
     ],
     "security": {
@@ -29,7 +30,7 @@
     "active": true,
     "targets": "all",
     "icon": [
-      "icons/icon-neutral.png"
+      "icons/icon-neutral-dark.png"
     ]
   }
 }
