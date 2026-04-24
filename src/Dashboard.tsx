@@ -32,11 +32,11 @@ export default function FocusChart() {
       <div style={{ background: "#242526", borderRadius: 12, padding: "16px 8px 8px" }}>
         <ResponsiveContainer width="100%" height={250}>
           <AreaChart data={data} margin={{ top: 0, right: 16, left: -16, bottom: 0 }}>
-            <CartesianGrid stroke="#ececec" vertical={false} />
+            <CartesianGrid stroke="#888" vertical={false} />
             <XAxis dataKey="time" tick={{ fontSize: 12, fill: "#888" }} axisLine={false} tickLine={false} />
             <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "#888" }} axisLine={false} tickLine={false} />
             <Tooltip
-              contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+              contentStyle={{ borderRadius: 8, border: "none", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", backgroundColor: "#3A3B3C"}}
               formatter={(value) => [`${value ?? ""}`, "Score"]}
             />
             <defs>
