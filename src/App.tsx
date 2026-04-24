@@ -1,21 +1,8 @@
 import { GlobalStyles } from "@mui/material";
-import { useEffect, useState } from "react";
-import { listen } from "@tauri-apps/api/event";
 
 import Dashboard from "./Dashboard";
-import { RGB } from "./color";
 
 function App() {
-  const [graphColor, setGraphColor] = useState<RGB | null>(null);
-
-  useEffect(() => {
-    let unlistenFn: (() => void) | null = null;
-    type RGB = { r: number; g: number; b: number };
-    listen<RGB>("graph-color", (event) => {
-      setGraphColor(event.payload);
-    });
-  }, []);
-
   return (
     <>
       <GlobalStyles
@@ -38,9 +25,7 @@ function App() {
       />
 
       <main style={{ height: "100%" }}>
-        <Dashboard
-          color={graphColor ?? { r: 255, g: 255, b: 255 }}
-        />
+        <Dashboard/>
       </main>
     </>
   );
