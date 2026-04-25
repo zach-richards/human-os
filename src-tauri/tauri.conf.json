@@ -18,8 +18,8 @@
         "alwaysOnTop": false,
         "skipTaskbar": false,
         "resizable": true,
-        "width": 700,
-        "height": 500
+        "width": 680,
+        "height": 550
       }
     ],
     "security": {

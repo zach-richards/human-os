@@ -96,7 +96,7 @@ pub fn start_ui_loop(app: &tauri::AppHandle) {
             };
 
             tray_icon::update_focus_fuel(&app, score).unwrap();
-            rs_sender::send_state_to_frontend(&app, state);
+            rs_sender::send_focus_update(&app, score);
 
             thread::sleep(Duration::from_secs(1));
         }

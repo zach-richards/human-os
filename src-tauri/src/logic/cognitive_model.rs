@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use crate::sys::system;
 
@@ -50,7 +50,8 @@ pub struct CognitiveModel {
     pub score: f32,
     pub state: FocusState,
 
-    last_update: Instant,
+    pub focus_over_time: Vec<(Instant, f32)>,
+    pub last_update: Instant,
     last_keys: u32,
     last_switches: u32,
     last_backspaces: u32,
@@ -61,6 +62,7 @@ impl CognitiveModel {
         Self {
             score: 0.5,
             state: FocusState::Neutral,
+            focus_over_time: Vec::new(),
             last_update: Instant::now(),
             last_keys: 0,
             last_switches: 0,
@@ -138,6 +140,7 @@ impl CognitiveModel {
         self.state = FocusState::from_score(self.score, self.state);
 
         self.last_update = Instant::now();
+        self.focus_over_time.push((self.last_update, self.score));
         self.last_keys = sys.key_count;
         self.last_switches = sys.window_switch_count;
         self.last_backspaces = sys.backspace_count;

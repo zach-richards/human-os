@@ -46,10 +46,12 @@ fn apply_color(base: &RgbaImage, score: f32) -> Image {
 // ===============================
 pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let focus_item = MenuItem::new(app, "Focus Fuel: 50%", true, None::<&str>)?;
+    let open_item = MenuItem::new(app, "Open App", true, None::<&str>)?;
     let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
 
     let menu = Menu::new(app)?;
     menu.append(&focus_item)?;
+    menu.append(&open_item)?;
     menu.append(&quit_item)?;
 
     let tray = TrayIconBuilder::new()
@@ -57,8 +59,20 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
         .on_menu_event(|app, event| {
-            if event.id.as_ref() == "Quit" {
-                app.exit(0);
+            match event.id.as_ref() {
+                "Open App" => {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.unminimize();
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                        let _ = window.set_always_on_top(true);
+                        let _ = window.set_always_on_top(false);
+                    }
+                }
+                "Quit" => {
+                    app.exit(0);
+                }
+                _ => {}
             }
         })
         .build(app)?;

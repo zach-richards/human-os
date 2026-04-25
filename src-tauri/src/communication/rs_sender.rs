@@ -14,3 +14,7 @@ pub fn send_state_to_frontend(app: &tauri::AppHandle, state: FocusState) {
 
     app.emit("graph-color", color).unwrap();
 }
+
+pub fn send_focus_update(app: &tauri::AppHandle, score: f32) {
+    app.emit("focus-update", (score * 100.0).round() as i32).unwrap();
+}

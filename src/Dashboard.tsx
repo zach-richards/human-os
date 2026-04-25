@@ -1,23 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { scores } from "./communication/TSXReciever";
+import { getSampled } from "./sampling";
  
 // ✏️ Change this to any color you want
 const GRAPH_COLOR = "#6366f1";
  
-// Build the last hour of data with timestamps
-const now = Date.now();
-const data = [
-  { time: new Date(now - 60 * 60 * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), score: 20 },
-  { time: new Date(now - 45 * 60 * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), score: 55 },
-  { time: new Date(now - 30 * 60 * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), score: 30 },
-  { time: new Date(now - 15 * 60 * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), score: 75 },
-  { time: new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),                  score: 50 },
-];
- 
 const activities = ["Coding", "Writing", "School", "Work", "Free"];
- 
+
 export default function FocusChart() {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(prev => prev + 1);
+    }, 60 * 1000); // every 1 minute
+
+    return () => clearInterval(interval);
+  }, []);
+
   const [activity, setActivity] = useState("");
+
+  const fallback = [0, 0, 0, 0, 0, 50]; 
+
+  const source =
+    getSampled(scores, 6)?.slice(0, 6) ??
+    fallback;
+
+  const now = Date.now() + tick * 0;
+
+  // take last 5 historical points
+  const lastFive = source.slice(-5);
+
+  // ADD current point explicitly
+  const dataPoints = [...lastFive, source[source.length - 1] ?? 0];
+
+  const data = dataPoints.map((score, i) => {
+    const minutesAgo = (dataPoints.length - 1 - i); // now is 0
+
+    return {
+      time: new Date(now - minutesAgo * 60 * 1000).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      score,
+    };
+  });
  
   return (
     <div style={{ padding: 24, maxWidth: 600, fontFamily: "sans-serif" }}>
@@ -25,7 +52,7 @@ export default function FocusChart() {
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ margin: 0, fontSize: 20 }}>Focus Score</h2>
-        <p style={{ margin: "4px 0 0", color: "#888", fontSize: 14 }}>Last 60 minutes</p>
+        <p style={{ margin: "4px 0 0", color: "#888", fontSize: 14 }}>Last 5 minutes</p>
       </div>
  
       {/* Graph */}
