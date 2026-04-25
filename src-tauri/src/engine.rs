@@ -19,9 +19,10 @@ fn initialize_system_time() {
         .init_sys_time = Some(Instant::now());
 }
 
-fn start_system_input_update_loop() {
-    thread::spawn(|| {
-        listen(system::handle_input_event).unwrap();
+pub fn start_system_input_update_loop() {
+    thread::spawn(|| loop {
+        system::poll_input_devices();
+        std::thread::sleep(Duration::from_millis(10));
     });
 }
 
@@ -69,10 +70,10 @@ fn start_decision_engine_loop() {
             };
 
             let intervention = decision_eng::run(
-                key_count,
-                backspace_count,
-                window_switch_count,
-                idle_secs,
+                key_count.try_into().unwrap(),
+                backspace_count.try_into().unwrap(),
+                window_switch_count.try_into().unwrap(),
+                idle_secs.try_into().unwrap(),
             );
 
             trigger_intervention(intervention);

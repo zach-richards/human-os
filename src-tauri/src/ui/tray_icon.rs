@@ -1,106 +1,102 @@
-// tray_icon.rs
+use std::time::{Duration, Instant};
 
-use std::path::PathBuf;
-
-use tauri::{AppHandle, tray::TrayIconBuilder, menu::{Menu, MenuItem}};
-use image::Rgba;
+use tauri::{
+    AppHandle,
+    Manager,
+    tray::TrayIconBuilder,
+    menu::{Menu, MenuItem},
+};
 use tauri::image::Image;
+use image::RgbaImage;
 
-use crate::auxillary::get_color_from_score::{get_color_from_score};
+use crate::auxillary::get_color_from_score::get_color_from_score;
 
-pub struct TrayIcon {
-    base_icon: PathBuf,
+// ===============================
+// STATE (NO GLOBAL MUTEX CHAOS)
+// ===============================
+pub struct TrayState {
+    pub tray: tauri::tray::TrayIcon,
+    pub focus_item: MenuItem<tauri::Wry>,
+    pub base_icon: RgbaImage,
+    pub last_update: std::sync::Mutex<Instant>,
 }
 
-impl TrayIcon {
-    pub fn new() -> Self {
-        Self {
-            base_icon: PathBuf::from("icons/icon-neutral.png"),
+// ===============================
+// ICON GENERATION (IN MEMORY ONLY)
+// ===============================
+fn apply_color(base: &RgbaImage, score: f32) -> Image {
+    let mut img = base.clone();
+    let color = get_color_from_score(score);
+
+    for px in img.pixels_mut() {
+        let a = px[3];
+        if a > 0 {
+            px[0] = color.0;
+            px[1] = color.1;
+            px[2] = color.2;
         }
     }
 
-    fn generate_colored_icon(&self, score: f32) -> String {
-        let img = image::open(&self.base_icon).expect("icon load failed");
-        let mut rgba = img.to_rgba8();
-
-        let color = get_color_from_score(score);
-
-        for px in rgba.pixels_mut() {
-            let a = px[3];
-            if a > 0 {
-                *px = Rgba([color.0, color.1, color.2, a]);
-            }
-        }
-
-        let path = format!("/tmp/tray_icon_{}.png", rand::random::<u32>());
-        rgba.save(&path).unwrap();
-        path
-    }
+    let (w, h) = img.dimensions();
+    Image::new_owned(img.into_raw(), w, h)
 }
 
+// ===============================
+// SETUP TRAY (CALLED ONCE)
+// ===============================
 pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
-    let focus_fuel = MenuItem::new(app, &format!("Focus Fuel 50%"), true, None::<&str>)?;
+    let focus_item = MenuItem::new(app, "Focus Fuel: 50%", true, None::<&str>)?;
     let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
 
     let menu = Menu::new(app)?;
-    menu.append(&focus_fuel)?;
+    menu.append(&focus_item)?;
     menu.append(&quit_item)?;
 
-    TrayIconBuilder::with_id("main")
-        .tooltip("TEST TOOLTIP 123")
+    let tray = TrayIconBuilder::new()
+        .tooltip("Human OS")
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-        .on_menu_event(|app, event| match event.id.as_ref() {
-            "Quit" => app.exit(0),
-            _ => {}
+        .on_menu_event(|app, event| {
+            if event.id.as_ref() == "Quit" {
+                app.exit(0);
+            }
         })
         .build(app)?;
+
+    let base_icon = image::open("icons/32x32.png")
+        .map_err(|e| tauri::Error::from(anyhow::anyhow!(e)))?
+        .to_rgba8();
+
+    app.manage(TrayState {
+        tray,
+        focus_item,
+        base_icon,
+        last_update: std::sync::Mutex::new(Instant::now()),
+    });
 
     Ok(())
 }
 
+// ===============================
+// FAST UPDATE PATH (HOT LOOP)
+// ===============================
 pub fn update_focus_fuel(app: &AppHandle, score: f32) -> tauri::Result<()> {
-    let tray = app.tray_by_id("main").unwrap();
+    let state = app.state::<TrayState>();
 
-    let icon_manager = TrayIcon::new();
-    let icon_path = icon_manager.generate_colored_icon(score);
+    let now = Instant::now();
+    let mut last = state.last_update.lock().unwrap();
+    *last = now; // FORCE UPDATE (no debounce)
 
-    let img = image::open(&icon_path).expect("icon load failed");
+    let icon = apply_color(&state.base_icon, score);
 
-    // force RGBA8
-    let rgba = img.to_rgba8();
+    state.tray.set_icon(Some(icon))?;
 
-    let (width, height) = rgba.dimensions();
+    state.focus_item.set_text(format!(
+        "Focus Fuel: {}%",
+        (score * 100.0).round() as i32
+    ))?;
 
-    // get raw pixel buffer
-    let bytes = rgba.into_raw();
-
-    let image = Image::new_owned(bytes, width, height);
-
-    tray.set_icon(Some(image)).unwrap();
-
-    // 1. create new menu
-    let menu = Menu::new(app)?;
-
-    // 2. dynamic item
-    let focus_item = MenuItem::new(
-        app,
-        format!("Focus Fuel: {}%", (score * 100.0).round() as i8),
-        true,
-        None::<&str>,
-    )?;
-
-    let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
-
-    // 3. append items
-    menu.append(&focus_item)?;
-    menu.append(&quit_item)?;
-
-    // 4. get tray
-    let tray = app.tray_by_id("main").unwrap();
-
-    // 5. replace menu
-    tray.set_menu(Some(menu))?;
+    println!("🔥 update_focus_fuel called: score = {}", score);
 
     Ok(())
 }
