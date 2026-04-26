@@ -1,11 +1,15 @@
 // close_tab.rs
 
+// Detects distracting tabs and send notification to close it if needed.
+// Distracting tabs meaning only YouTube at the moment
+
 use std::process::Command;
 use std::thread;
 
 use crate::auxillary::state::SYSTEM_INFO;
 use crate::notifications::notifications::Notification;
 
+// Uses window ID to close window
 fn close_window_id(window_id: &str) -> Result<(), String> {
     if window_id.is_empty() {
         return Err("Window ID is empty".to_string());
@@ -28,6 +32,7 @@ fn close_window_id(window_id: &str) -> Result<(), String> {
     Ok(())
 }
 
+// Searches for those with context "distraction" to then ask to close
 pub fn choose_tab_to_close() -> Option<(String, String)> {
     let sys_info = SYSTEM_INFO.lock().unwrap_or_else(|e| e.into_inner());
 

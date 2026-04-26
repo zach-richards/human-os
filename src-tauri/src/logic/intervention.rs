@@ -1,5 +1,7 @@
 // intervention.rs
 
+// Takes the intervention type and handles the correct execution of the type.
+
 use std::thread;
 
 use crate::logic::actions::dnd::enable_dnd;

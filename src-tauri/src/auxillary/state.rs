@@ -1,5 +1,7 @@
 // state.rs
 
+// system info and cognitive model globally shared states
+
 use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
 

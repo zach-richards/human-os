@@ -15,6 +15,7 @@ fn greet(name: &str) -> String {
     format!("Hello, {}!", name)
 }
 
+// Handles the running between the React frontend, Tauri tray icon, and Rust backend in one
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()

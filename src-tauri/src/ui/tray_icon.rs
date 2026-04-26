@@ -1,5 +1,7 @@
 // tray_icon.rs
 
+// Creates a tray icon for the taskbar to show focus state and score
+
 use tauri::{
     AppHandle,
     Manager,
@@ -19,6 +21,7 @@ impl TrayManager {
         Self
     }
 
+    // Generates the correct color for the state
     fn generate_colored_icon(&self, app: &AppHandle, score: f32) -> RgbaImage {
         let icon_path = app
             .path()
@@ -44,6 +47,7 @@ impl TrayManager {
     }
 }
 
+// Sets up the tray icon with menu
 pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let focus_item = MenuItem::new(app, "Focus Fuel 50%", true, None::<&str>)?;
     let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
@@ -65,6 +69,7 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
+// Updates the icon and the score on the menu of the icon
 pub fn update_focus_fuel(app: &AppHandle, score: f32) -> tauri::Result<()> {
     let tray = app
         .tray_by_id("main")

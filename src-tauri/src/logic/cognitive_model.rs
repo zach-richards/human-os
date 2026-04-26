@@ -1,5 +1,7 @@
 //cognitive_model.rs
 
+// Holds focus score and state for use by ui and decision engine.
+
 /*
 
 KPS = keystrokes per second (over 60 seconds)
@@ -22,6 +24,7 @@ use std::time::Instant;
 
 use crate::sys::system;
 
+// Focus state used to determine unique color
 #[derive(Debug, Clone, Copy)]
 pub enum FocusState {
     Flow,
@@ -59,6 +62,7 @@ impl CognitiveModel {
         }
     }
 
+    // Calculate score from system data
     fn calc_score(&self, sys_info: &system::SystemInfo) -> f32 {
         // Keystrokes per second normalized
         let norm_kps: f32 = (sys_info.key_count as f32 / 5.0).min(1.0);

@@ -1,5 +1,8 @@
 // take_break.rs
 
+// Sends notification asking user if they would like to take a break.
+// If accepted, shows timer notification.
+
 use std::{thread, time::Duration};
 
 use crate::notifications::notifications;

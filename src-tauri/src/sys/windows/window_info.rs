@@ -1,5 +1,7 @@
 // window_info.rs
 
+// An instance of a window with the info needed to process switching and context
+
 use crate::sys::windows::window_context;
 
 pub struct WindowInfo {

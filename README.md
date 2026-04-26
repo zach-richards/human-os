@@ -3,6 +3,8 @@
 
 HumanOS is a lightweight background system that monitors behavioral signals and helps you maintain deep focus through intelligent, non-invasive suggestions.
 
+This app currently only runs on Debian, Ubuntu, or Linux Mint with the GNOME desktop evironment due to system and app dependencies.
+
 ---
 
 ## ⚙️ Core Idea
@@ -50,8 +52,8 @@ flowchart TD
 ### 🔋 Focus Battery
 - Real-time score (0.0 → 1.0)
 - Mapped to 5 visual states:
-  - 🔴 Distracted
-  - 🟠 Unstable
+  - 🔴 Fatigued
+  - 🟠 Distracted
   - 🟡 Neutral
   - 🟢 Focused
   - 🔵 Flow
@@ -85,5 +87,36 @@ flowchart TD
 ### 🔒 Privacy First
 - ❌ No content tracking
 - ❌ No keystroke logging
-- ✅ Only behavioral metadata
+- ✅ Only behavioral metadata (including window context, not apps)
 - ✅ Fully local processing
+
+---
+
+### 🖥️ Intuitive UI
+- A tray icon with colors to see state at a glance
+- Focus score percentage
+- An application interface that contains:
+  - A graph of focus overtime
+  - A menu to show target objective so that correct focus context is determined
+
+## 🖐️ How to Use
+
+Source code:
+  - Download from latest release
+  - Open terminal
+  - type `cd Downloads`
+  - type `./human-os` to run
+
+.deb:
+  - Download from latest release
+  - Open terminal
+  - type `cd Downloads`
+  - type `sudo apt install ./human-os_0.3.0_amd64.deb`
+  - Run from terminal with `human-os` or use app menu
+
+.AppImage:
+  - Download from latest release
+  - Open terminal
+  - type `cd Downloads`
+  - type `chmod +x human-os_0.3.0_amd64.AppImage `
+  - type `./human-os_0.3.0_amd64.AppImage`

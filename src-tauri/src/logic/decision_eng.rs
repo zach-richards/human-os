@@ -1,3 +1,8 @@
+// decision_eng.rs
+
+// A decision engine to determine what kind of intervention to use
+// to make the user more productive. Currently only three options.
+
 use std::collections::HashMap;
 
 use crate::logic::intervention::InterventionType;

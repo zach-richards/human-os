@@ -1,9 +1,13 @@
+// Dashboard.tsx
+
+// Displays a graph of focus over the last 5 minutes. A menu that does not do anything yet but it will select context
+// that detects if you are focused currently or not.
+
 import { useEffect, useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { scores } from "./communication/TSXReciever";
 import { getSampled } from "./sampling.tsx";
  
-// ✏️ Change this to any color you want
 const GRAPH_COLOR = "#6366f1";
  
 const activities = ["Coding", "Writing", "School", "Work", "Free"];

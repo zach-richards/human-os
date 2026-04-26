@@ -1,5 +1,7 @@
 // mouse.rs
 
+// Handle mouse input
+
 use std::time::Instant;
 
 use crate::sys::system;
