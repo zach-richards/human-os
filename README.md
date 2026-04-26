@@ -99,7 +99,7 @@ flowchart TD
   - A graph of focus overtime
   - A menu to show target objective so that correct focus context is determined
 
-## How to Use
+## 🖐️ How to Use
 
 Source code:
   - Download from latest release
