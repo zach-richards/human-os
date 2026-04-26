@@ -1,6 +1,6 @@
 // system.rs
 
-// struct to hold system info and update info.
+// Track system input
 
 use std::time::{ Duration, Instant };
 
@@ -107,6 +107,7 @@ impl SystemInfo {
     }
 }*/
 
+// Handle all inputs correctly for each type
 pub fn handle_input_event(event: Event) {
     let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
 

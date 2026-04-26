@@ -1,3 +1,7 @@
+// App.tsx
+
+// The instance of the app itself. Contains dashboard.
+
 import { GlobalStyles } from "@mui/material";
 
 import Dashboard from "./Dashboard";

@@ -1,3 +1,7 @@
+// notification.rs
+
+// a wrapper of notify_rust with a set template for my app's notifications to use.
+
 use notify_rust::Notification as Notify;
 
 pub struct Notification {

@@ -1,5 +1,7 @@
 // keyboard.rs
 
+// Track keyboard input
+
 use std::time::Instant;
 
 use crate::sys::system::SystemInfo;

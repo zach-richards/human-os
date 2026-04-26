@@ -1,5 +1,7 @@
 // window_context.rs
 
+// classifies window context by the name or title
+
 pub fn classify_window_context<'a>(app_name: &str, title: &str) -> &'a str {
     let title = title.to_lowercase();
     let app_name = app_name.to_lowercase();

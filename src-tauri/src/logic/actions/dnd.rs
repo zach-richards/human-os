@@ -1,3 +1,7 @@
+// dnd.rs
+
+// Sends message asking to turn on do not disturb. If accepted, turns back on in a little bit of time.
+
 use std::{process::Command, thread};
 use std::time::Duration;
 

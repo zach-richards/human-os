@@ -1,5 +1,7 @@
 // engine.rs
 
+// An abstract handling of all the threads and tracking
+
 use std::time::{Instant, Duration};
 use std::thread;
 

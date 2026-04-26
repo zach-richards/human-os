@@ -1,5 +1,7 @@
 // get_color_from_score.rs
 
+// gets focus color from focus fuel score
+
 pub fn get_color_from_score(score: f32) -> (u8, u8, u8) {
     let s = score.clamp(0.0, 1.0);
 
