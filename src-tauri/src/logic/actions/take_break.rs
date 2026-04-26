@@ -13,9 +13,9 @@ pub fn send_break_notification(duration_secs: u64) {
         "Later",
     );
 
-    let userAcceptAction = notification.send();
+    let user_accept_action = notification.send();
 
-    if userAcceptAction {
+    if user_accept_action {
         start_break_timer(duration_secs);
     }
 }
@@ -25,7 +25,7 @@ fn start_break_timer(seconds: u64) {
         let mut remaining = seconds;
 
         // Create notification and keep the handle
-        let mut notif = notify_rust::Notification::new()
+        let _notif = notify_rust::Notification::new()
             .summary("Break in progress")
             .body(&format!("{} seconds remaining", remaining))
             .show()
@@ -40,7 +40,7 @@ fn start_break_timer(seconds: u64) {
                 remaining = remaining.saturating_sub(1);
             }
 
-            notif = notify_rust::Notification::new()
+            let _notif = notify_rust::Notification::new()
                 .summary("Break in progress")
                 .body(&format!("{} seconds remaining", remaining))
                 .show()

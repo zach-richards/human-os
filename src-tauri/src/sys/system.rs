@@ -173,7 +173,6 @@ pub fn track_window_info() {
 
             if is_window_switch {
                 mut_sys_info.window_switch_count += 1;
-                println!("window switch detected: {}", mut_sys_info.window_switch_count);
             }
 
             mut_sys_info.current_window = Some(WindowInfo::new(win.window_id.clone(), &win.app_name, &win.title));
@@ -194,7 +193,6 @@ pub fn track_window_info() {
 
     if is_window_switch {
         mut_sys_info.window_switch_count += 1;
-        println!("window switch detected: {}", mut_sys_info.window_switch_count);
     }
 
     mut_sys_info.current_window = Some(WindowInfo::new(new_id, &win.app_name, &win.title));
