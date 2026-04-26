@@ -90,6 +90,15 @@ flowchart TD
 - ✅ Only behavioral metadata (including window context, not apps)
 - ✅ Fully local processing
 
+---
+
+### 🖥️ Intuitive UI
+- A tray icon with colors to see state at a glance
+- Focus score percentage
+- An application interface that contains:
+  - A graph of focus overtime
+  - A menu to show target objective so that correct focus context is determined
+
 ## How to Use
 
 Source code:
