@@ -31,6 +31,7 @@ fn close_window_id(window_id: &str) -> Result<(), String> {
 pub fn choose_tab_to_close() -> Option<(String, String)> {
     let sys_info = SYSTEM_INFO.lock().unwrap_or_else(|e| e.into_inner());
 
+    // Check for distracting windows and close them if they are distracting
     for window in sys_info.windows.iter() {
         if window.context == "distraction" {
             return Some((window.id.clone(), window.title.clone()));
@@ -43,7 +44,6 @@ pub fn choose_tab_to_close() -> Option<(String, String)> {
 pub fn send_close_tab_notification(id: String, title: String) {
         let message = format!("Close \"{}\"?", title);
 
-        // spawn so we don't block engine loop
         thread::spawn(move || {
             let notification = Notification::new(
                 "Focus Alert",
@@ -52,19 +52,10 @@ pub fn send_close_tab_notification(id: String, title: String) {
                 "Dismiss",
             );
 
-            // IMPORTANT:
-            // action handling should live inside your Notification::send()
-            // NOT here anymore
             let accepted_action = notification.send();
 
             if accepted_action {
                 close_window_id(&id).unwrap();
             }
-
-            // If you still want auto-close behavior without user action fallback:
-            // (optional safety behavior)
-            println!("Notification sent for tab: {}", title);
-
-            // DO NOT auto-close anymore unless explicitly triggered in notification engine
         });
 }

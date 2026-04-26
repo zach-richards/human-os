@@ -2,41 +2,56 @@
 
 use std::{thread, time::Duration};
 
-use crate::notifications::notifications::Notification;
+use crate::notifications::notifications;
+use notify_rust;
 
 pub fn send_break_notification(duration_secs: u64) {
-    let notification = Notification::new(
+    let notification = notifications::Notification::new(
         "Take a Break",
         "You've been working for a while",
         "Take Break",
         "Later",
     );
 
-    notification.send();
+    let userAcceptAction = notification.send();
 
-    // In your current architecture, action handling is inside notify-rust layer
-    // So we just assume "break" decision is handled in notification engine
-    start_break_timer(duration_secs);
+    if userAcceptAction {
+        start_break_timer(duration_secs);
+    }
 }
 
 fn start_break_timer(seconds: u64) {
     thread::spawn(move || {
-        Notification::new(
-            "Break Started",
-            "Relax for a moment",
-            "Ok",
-            "Dismiss",
-        )
-        .send();
+        let mut remaining = seconds;
 
-        thread::sleep(Duration::from_secs(seconds));
+        // Create notification and keep the handle
+        let mut notif = notify_rust::Notification::new()
+            .summary("Break in progress")
+            .body(&format!("{} seconds remaining", remaining))
+            .show()
+            .unwrap();
 
-        Notification::new(
-            "Break Over",
-            "Back to work",
-            "Ok",
-            "Dismiss",
-        )
-        .send();
+        while remaining > 0 {
+            thread::sleep(Duration::from_secs(2));
+
+            if remaining > 60 {
+                remaining -= 60;
+            } else {
+                remaining = remaining.saturating_sub(1);
+            }
+
+            notif = notify_rust::Notification::new()
+                .summary("Break in progress")
+                .body(&format!("{} seconds remaining", remaining))
+                .show()
+                .unwrap();
+        }
+
+        // end notification
+        notify_rust::Notification::new()
+            .summary("Break Over")
+            .body("Time to get back to work")
+            .show()
+            .unwrap();
     });
 }

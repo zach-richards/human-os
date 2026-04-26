@@ -1,7 +1,7 @@
-// dnd.rs
-
 use std::{process::Command, thread};
 use std::time::Duration;
+
+use crate::notifications::notifications::Notification;
 
 pub fn enable_dnd() -> Result<(), String> {
     #[cfg(target_os = "linux")]
@@ -21,9 +21,17 @@ pub fn enable_dnd() -> Result<(), String> {
         }
     }
 
+    Notification::new(
+        "Do Not Disturb Enabled",
+        "Focus mode is now active",
+        "OK",
+        "Dismiss",
+    )
+    .send();
+
     // spawn timer thread
     thread::spawn(|| {
-        thread::sleep(Duration::from_secs(600)); // 10 minutes
+        thread::sleep(Duration::from_secs(10)); // 10 minutes
 
         if let Err(e) = disable_dnd() {
             eprintln!("Failed to disable DND: {}", e);
@@ -50,6 +58,14 @@ pub fn disable_dnd() -> Result<(), String> {
             return Err("Failed to disable DND".into());
         }
     }
+
+    Notification::new(
+        "Do Not Disturb Disabled",
+        "Focus mode has ended",
+        "OK",
+        "Dismiss",
+    )
+    .send();
 
     Ok(())
 }

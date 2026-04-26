@@ -6,7 +6,6 @@ use crate::logic::actions::close_tab::choose_tab_to_close;
 pub fn run(kps: i16, bps: i16, wps: i16, idle: i16) -> InterventionType {
     let mut scores: HashMap<&str, i16> = HashMap::new();
 
-    // Scoring logic (same idea, safer routing later)
     scores.insert("Break", idle * 2 + if kps < 2 { 1 } else { 0 });
     scores.insert("CloseTabs", wps * 3);
     scores.insert("DND", bps * 2 + wps);
@@ -24,12 +23,12 @@ pub fn run(kps: i16, bps: i16, wps: i16, idle: i16) -> InterventionType {
             if let Some((id, title)) = choose_tab_to_close() {
                 InterventionType::CloseTab { id, title }
             } else {
-                InterventionType::TakeBreak { duration_secs: 300 }
+                InterventionType::TakeBreak { duration_secs: 10 }
             }
         }
 
         "DND" => InterventionType::EnableDnd,
 
-        _ => InterventionType::TakeBreak { duration_secs: 300 },
+        _ => InterventionType::TakeBreak { duration_secs: 30 },
     }
 }

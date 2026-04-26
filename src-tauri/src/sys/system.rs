@@ -155,11 +155,9 @@ pub fn track_window_info() {
         return;
     };
 
-    // Clone the current window id to avoid borrowing `mut_sys_info` immutably
-    // while we hold a mutable borrow of `mut_sys_info.windows` in the loop.
     let current_window_id = mut_sys_info.current_window.as_ref().map(|w| w.id.clone());
 
-    // If we already know about this window, update its info.
+    // update timestamps and detect window switches
     for window in &mut mut_sys_info.windows {
         if window.id == win.window_id {
             if window.title != win.title {
@@ -183,7 +181,6 @@ pub fn track_window_info() {
         }
     }
 
-    // Not found: create a new WindowInfo for the active window and register it.
     let new_id = win.window_id.clone();
     mut_sys_info.windows.push(WindowInfo::new(new_id.clone(), &win.app_name, &win.title));
     if let Some(last) = mut_sys_info.windows.last_mut() {

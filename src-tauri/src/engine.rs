@@ -53,7 +53,7 @@ fn start_cognitive_loop() {
 fn start_decision_engine_loop() {
     thread::spawn(|| {
         loop {
-            thread::sleep(Duration::from_secs(30));
+            thread::sleep(Duration::from_secs(15));
 
             let (key_count, backspace_count, window_switch_count, idle_secs) = {
                 let sys = SYSTEM_INFO.lock().unwrap();

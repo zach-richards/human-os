@@ -1,53 +1,46 @@
 use notify_rust::Notification as Notify;
 
 pub struct Notification {
-    pub label: &'static str,
-    pub description: &'static str,
-    pub option1: &'static str,
-    pub option2: &'static str,
+    pub label: String,
+    pub description: String,
+    pub option1: String,
+    pub option2: String,
 }
 
 impl Notification {
     pub fn new(
-        label: &'static str,
-        description: &'static str,
-        option1: &'static str,
-        option2: &'static str,
+        label: impl Into<String>,
+        description: impl Into<String>,
+        option1: impl Into<String>,
+        option2: impl Into<String>,
     ) -> Self {
         Self {
-            label,
-            description,
-            option1,
-            option2,
+            label: label.into(),
+            description: description.into(),
+            option1: option1.into(),
+            option2: option2.into(),
         }
     }
 
     pub fn send(&self) -> bool {
-        let label = self.label;
-        let description = self.description;
-        let option1 = self.option1;
-        let option2 = self.option2;
-
         let handle = Notify::new()
-            .summary(label)
-            .body(description)
-            .action("action1", option1)
-            .action("action2", option2)
+            .summary(&self.label)
+            .body(&self.description)
+            .action("action1", &self.option1)
+            .action("action2", &self.option2)
             .show();
 
-        if let Ok(notification_handle) = handle {
-            let mut result = false;
+        match handle {
+            Ok(notification_handle) => {
+                let mut result = false;
 
-            notification_handle.wait_for_action(|action| {
-                match action {
-                    "action1" => result = true,
-                    _ => result = false,
-                }
-            });
+                notification_handle.wait_for_action(|action| {
+                    result = matches!(action, "action1");
+                });
 
-            return result;
+                result
+            }
+            Err(_) => false,
         }
-
-        false
     }
 }
