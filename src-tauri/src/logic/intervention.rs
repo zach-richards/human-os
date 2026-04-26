@@ -6,19 +6,11 @@ use crate::logic::actions::dnd::enable_dnd;
 use crate::logic::actions::take_break::send_break_notification;
 use crate::logic::actions::close_tab::send_close_tab_notification;
 
-// =========================
-// TYPES
-// =========================
-
 pub enum InterventionType {
     CloseTab { id: String, title: String },
     EnableDnd,
     TakeBreak { duration_secs: u64 },
 }
-
-// =========================
-// PUBLIC ENTRY
-// =========================
 
 pub fn trigger_intervention(intervention: InterventionType) {
     thread::spawn(move || {

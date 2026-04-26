@@ -1,38 +1,37 @@
 // tray_icon.rs
 
-use std::path::PathBuf;
-use tauri::{AppHandle, tray::TrayIconBuilder, menu::{Menu, MenuItem}};
-use image::Rgba;
+use tauri::{
+    AppHandle,
+    Manager,
+    tray::TrayIconBuilder,
+    menu::{Menu, MenuItem},
+};
+
+use image::{Rgba, RgbaImage};
 use tauri::image::Image;
 
-pub struct TrayIcon {
-    base_icon: PathBuf,
-}
+use crate::auxillary::get_color_from_score::get_color_from_score;
 
-impl TrayIcon {
+pub struct TrayManager;
+
+impl TrayManager {
     pub fn new() -> Self {
-        Self {
-            base_icon: PathBuf::from("icons/icon-neutral.png"),
-        }
+        Self
     }
 
-    fn get_color_from_score(score: f32) -> (u8, u8, u8) {
-        let s = score.clamp(0.0, 1.0);
+    fn generate_colored_icon(&self, app: &AppHandle, score: f32) -> RgbaImage {
+        let icon_path = app
+            .path()
+            .resolve(
+                "icons/icon-neutral.png",
+                tauri::path::BaseDirectory::Resource,
+            )
+            .expect("failed to resolve icon path");
 
-        match s {
-            s if s <= 0.2 => (248, 113, 113),
-            s if s <= 0.4 => (236, 175, 117),
-            s if s <= 0.6 => (217, 231, 122),
-            s if s <= 0.8 => (52, 211, 153),
-            _ => (96, 165, 250),
-        }
-    }
-
-    fn generate_colored_icon(&self, score: f32) -> String {
-        let img = image::open(&self.base_icon).expect("icon load failed");
+        let img = image::open(icon_path).expect("icon load failed");
         let mut rgba = img.to_rgba8();
 
-        let color = Self::get_color_from_score(score);
+        let color = get_color_from_score(score);
 
         for px in rgba.pixels_mut() {
             let a = px[3];
@@ -41,18 +40,16 @@ impl TrayIcon {
             }
         }
 
-        let path = format!("/tmp/tray_icon_{}.png", rand::random::<u32>());
-        rgba.save(&path).unwrap();
-        path
+        rgba
     }
 }
 
 pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
-    let focus_fuel = MenuItem::new(app, &format!("Focus Fuel 50%"), true, None::<&str>)?;
+    let focus_item = MenuItem::new(app, "Focus Fuel 50%", true, None::<&str>)?;
     let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
 
     let menu = Menu::new(app)?;
-    menu.append(&focus_fuel)?;
+    menu.append(&focus_item)?;
     menu.append(&quit_item)?;
 
     TrayIconBuilder::with_id("main")
@@ -69,46 +66,35 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 }
 
 pub fn update_focus_fuel(app: &AppHandle, score: f32) -> tauri::Result<()> {
-    let tray = app.tray_by_id("main").unwrap();
+    let tray = app
+        .tray_by_id("main")
+        .expect("tray not found - ensure setup_tray() was called first");
 
-    let icon_manager = TrayIcon::new();
-    let icon_path = icon_manager.generate_colored_icon(score);
-
-    let img = image::open(&icon_path).expect("icon load failed");
-
-    // force RGBA8
-    let rgba = img.to_rgba8();
+    // generate icon in memory (NO temp files)
+    let manager = TrayManager::new();
+    let rgba = manager.generate_colored_icon(app, score);
 
     let (width, height) = rgba.dimensions();
-
-    // get raw pixel buffer
     let bytes = rgba.into_raw();
 
-    let image = Image::new_owned(bytes, width, height);
+    let icon = Image::new_owned(bytes, width, height);
+    tray.set_icon(Some(icon))?;
 
-    tray.set_icon(Some(image)).unwrap();
-
-    // 1. create new menu
+    // rebuild menu (simple version)
     let menu = Menu::new(app)?;
 
-    // 2. dynamic item
     let focus_item = MenuItem::new(
         app,
-        format!("Focus Fuel: {}%", (score * 100.0).round() as i8),
+        format!("Focus Fuel: {}%", (score * 100.0).round() as i32),
         true,
         None::<&str>,
     )?;
 
     let quit_item = MenuItem::new(app, "Quit", true, None::<&str>)?;
 
-    // 3. append items
     menu.append(&focus_item)?;
     menu.append(&quit_item)?;
 
-    // 4. get tray
-    let tray = app.tray_by_id("main").unwrap();
-
-    // 5. replace menu
     tray.set_menu(Some(menu))?;
 
     Ok(())

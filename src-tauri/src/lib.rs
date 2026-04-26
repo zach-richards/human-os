@@ -5,7 +5,8 @@ mod logic;
 mod notifications;
 mod ui;
 mod engine;
-mod state;
+mod auxillary;
+mod communication;
 
 use tauri::AppHandle;
 

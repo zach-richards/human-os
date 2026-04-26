@@ -1,7 +1,7 @@
 {
   "name": "human-os",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,11 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.0.0",
+    "@mui/styled-engine": "^9.0.0",
+    "@mui/system": "^9.0.0",
     "@mui/x-charts": "^9.0.2",
     "@mui/x-data-grid-pro": "^9.0.2",
     "@mui/x-date-pickers": "^9.0.2",
@@ -18,7 +23,8 @@
     "@tauri-apps/plugin-opener": "^2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "tauri": "^0.9.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

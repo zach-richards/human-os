@@ -1,6 +1,6 @@
 {
   "productName": "human-os",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "identifier": "com.human-os.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -31,6 +31,9 @@
     "targets": "all",
     "icon": [
       "icons/icon-neutral-dark.png"
+    ],
+    "resources": [
+      "icons/icon-neutral.png"
     ]
   }
 }
