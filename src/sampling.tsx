@@ -1,15 +1,18 @@
 // sampling.tsx
 
-// A sampling of the last five points for the data to use for the graph.
-
-import { scores } from "./communication/TSXReciever"
+// Returns the last n scores from the buffer, evenly sampled if there are more than n.
 
 export function getSampled(scores: number[], n: number): number[] | null {
+  if (scores.length === 0) return null;
+
+  // Not enough data yet — return what we have, left-padded with nulls for spacing
   if (scores.length < n) return null;
 
-  const step = Math.floor(scores.length / n);
+  // Take the most recent n points evenly spaced from the tail
+  const step = scores.length / n;
 
   return Array.from({ length: n }, (_, i) => {
-    return scores[i * step];
+    const idx = Math.min(Math.round(i * step), scores.length - 1);
+    return scores[idx];
   });
 }

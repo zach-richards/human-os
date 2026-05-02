@@ -39,10 +39,10 @@ impl FocusState {
         use FocusState::*;
 
         match score {
-            0.80..=1.0 => Flow,
-            0.60..0.79 => Focus,
-            0.40..0.59 => Neutral,
-            0.20..0.39 => Distracted,
+            s if s >= 0.80 => Flow,
+            s if s >= 0.60 => Focus,
+            s if s >= 0.40 => Neutral,
+            s if s >= 0.20 => Distracted,
             _ => Fatigued,
         }
     }
@@ -61,9 +61,34 @@ impl CognitiveModel {
             state: FocusState::from_score(initial_score),
         }
     }
+}
 
+impl Default for CognitiveModel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CognitiveModel {
     // Calculate score from system data
     fn calc_score(&self, sys_info: &system::SystemInfo) -> f32 {
+        // Guard against division by zero at startup or after a minute reset
+        if sys_info.key_count == 0 {
+            // No keystrokes yet — score from idle and switch behaviour only
+            let now = Instant::now();
+            let idle_seconds = sys_info
+                .last_activity
+                .map(|last| now.duration_since(last).as_secs())
+                .unwrap_or(0);
+            let idle_ratio: f32 = (idle_seconds as f32 / 60.0).min(1.0);
+            let idle_score: f32 = 1.0 - idle_ratio;
+
+            let norm_switch: f32 = (sys_info.window_switch_count as f32 / 3.0).min(1.0);
+            let switch_score: f32 = 1.0 - norm_switch;
+
+            return (switch_score * 0.30) + (idle_score * 0.20);
+        }
+
         // Keystrokes per second normalized
         let norm_kps: f32 = (sys_info.key_count as f32 / 5.0).min(1.0);
 
@@ -73,12 +98,11 @@ impl CognitiveModel {
 
         // Idle time score
         let now = Instant::now();
-        // let last = sys_info.last_activity.unwrap_or_else(Instant::now);
         let idle_seconds = sys_info
             .last_activity
             .map(|last| now.duration_since(last).as_secs())
             .unwrap_or(0);
-        let idle_ratio: f32 = (idle_seconds as f32 / 60.0).min(1.0); // cap at 1.0
+        let idle_ratio: f32 = (idle_seconds as f32 / 60.0).min(1.0);
         let idle_score: f32 = 1.0 - idle_ratio;
 
         // Backspace ratio score

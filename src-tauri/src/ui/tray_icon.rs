@@ -2,6 +2,8 @@
 
 // Creates a tray icon for the taskbar to show focus state and score
 
+use std::sync::atomic::{AtomicI32, Ordering};
+
 use tauri::{
     AppHandle,
     Manager,
@@ -13,6 +15,9 @@ use image::{Rgba, RgbaImage};
 use tauri::image::Image;
 
 use crate::auxillary::get_color_from_score::get_color_from_score;
+
+// Track the last displayed score (stored as integer percentage) to skip redundant updates
+static LAST_SCORE_PCT: AtomicI32 = AtomicI32::new(-1);
 
 pub struct TrayManager;
 
@@ -69,8 +74,15 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
-// Updates the icon and the score on the menu of the icon
+// Updates the icon and the score on the menu of the icon.
+// Skips the rebuild if the rounded percentage hasn't changed since the last call.
 pub fn update_focus_fuel(app: &AppHandle, score: f32) -> tauri::Result<()> {
+    let score_pct = (score * 100.0).round() as i32;
+
+    if LAST_SCORE_PCT.swap(score_pct, Ordering::Relaxed) == score_pct {
+        return Ok(());
+    }
+
     let tray = app
         .tray_by_id("main")
         .expect("tray not found - ensure setup_tray() was called first");
@@ -85,12 +97,11 @@ pub fn update_focus_fuel(app: &AppHandle, score: f32) -> tauri::Result<()> {
     let icon = Image::new_owned(bytes, width, height);
     tray.set_icon(Some(icon))?;
 
-    // rebuild menu (simple version)
     let menu = Menu::new(app)?;
 
     let focus_item = MenuItem::new(
         app,
-        format!("Focus Fuel: {}%", (score * 100.0).round() as i32),
+        format!("Focus Fuel: {}%", score_pct),
         true,
         None::<&str>,
     )?;

@@ -34,7 +34,13 @@ fn close_window_id(window_id: &str) -> Result<(), String> {
 
 // Searches for those with context "distraction" to then ask to close
 pub fn choose_tab_to_close() -> Option<(String, String)> {
-    let sys_info = SYSTEM_INFO.lock().unwrap_or_else(|e| e.into_inner());
+    let sys_info = match SYSTEM_INFO.lock() {
+        Ok(guard) => guard,
+        Err(e) => {
+            eprintln!("SYSTEM_INFO mutex poisoned in choose_tab_to_close: {}", e);
+            e.into_inner()
+        }
+    };
 
     // Check for distracting windows and close them if they are distracting
     for window in sys_info.windows.iter() {
@@ -52,7 +58,7 @@ pub fn send_close_tab_notification(id: String, title: String) {
         thread::spawn(move || {
             let notification = Notification::new(
                 "Focus Alert",
-                Box::leak(message.into_boxed_str()),
+                message,
                 "Close",
                 "Dismiss",
             );

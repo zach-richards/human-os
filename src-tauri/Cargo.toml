@@ -1,6 +1,6 @@
 [package]
 name = "human-os"
-version = "0.3.0"
+version = "0.1.0"
 description = "This app works in the background to help manage the user's focus and emotions to use the computer more efficiently"
 authors = ["Zach Richards"]
 edition = "2024"
