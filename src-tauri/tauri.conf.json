@@ -1,6 +1,6 @@
 {
   "productName": "human-os",
-  "version": "0.3.0",
+  "version": "0.1.0",
   "identifier": "com.human-os.app",
   "build": {
     "beforeDevCommand": "npm run dev",

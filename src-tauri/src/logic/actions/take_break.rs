@@ -1,12 +1,11 @@
 // take_break.rs
 
 // Sends notification asking user if they would like to take a break.
-// If accepted, shows timer notification.
+// If accepted, shows a timer notification every 5 seconds until the break is over.
 
-use std::{thread, time::Duration};
+use std::{thread, time::Duration, process::Command};
 
 use crate::notifications::notifications;
-use notify_rust;
 
 pub fn send_break_notification(duration_secs: u64) {
     let notification = notifications::Notification::new(
@@ -16,45 +15,44 @@ pub fn send_break_notification(duration_secs: u64) {
         "Later",
     );
 
-    let user_accept_action = notification.send();
-
-    if user_accept_action {
+    if notification.send() {
         start_break_timer(duration_secs);
     }
+}
+
+fn notify(summary: &str, body: &str) {
+    let _ = Command::new("notify-send")
+        .arg(summary)
+        .arg(body)
+        .spawn();
 }
 
 fn start_break_timer(seconds: u64) {
     thread::spawn(move || {
         let mut remaining = seconds;
 
-        // Create notification and keep the handle
-        let _notif = notify_rust::Notification::new()
-            .summary("Break in progress")
-            .body(&format!("{} seconds remaining", remaining))
-            .show()
-            .unwrap();
+        notify("Break in progress", &format_remaining(remaining));
 
         while remaining > 0 {
-            thread::sleep(Duration::from_secs(2));
+            let tick = remaining.min(5);
+            thread::sleep(Duration::from_secs(tick));
+            remaining = remaining.saturating_sub(tick);
 
-            if remaining > 60 {
-                remaining -= 60;
-            } else {
-                remaining = remaining.saturating_sub(1);
+            if remaining > 0 {
+                notify("Break in progress", &format_remaining(remaining));
             }
-
-            let _notif = notify_rust::Notification::new()
-                .summary("Break in progress")
-                .body(&format!("{} seconds remaining", remaining))
-                .show()
-                .unwrap();
         }
 
-        // end notification
-        notify_rust::Notification::new()
-            .summary("Break Over")
-            .body("Time to get back to work")
-            .show()
-            .unwrap();
+        notify("Break Over", "Time to get back to work");
     });
+}
+
+fn format_remaining(secs: u64) -> String {
+    if secs >= 60 {
+        let m = secs / 60;
+        let s = secs % 60;
+        format!("{}:{:02} remaining", m, s)
+    } else {
+        format!("{} seconds remaining", secs)
+    }
 }

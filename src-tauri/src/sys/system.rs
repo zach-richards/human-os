@@ -92,6 +92,12 @@ impl SystemInfo {
     }*/
 }
 
+impl Default for SystemInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /*impl std::fmt::Debug for SystemInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SystemInfo")
@@ -111,7 +117,7 @@ impl SystemInfo {
 pub fn handle_input_event(event: Event) {
     let mut mut_sys_info = SYSTEM_INFO.lock().unwrap();
 
-    // track keyboard, mouse, and mouse buttons in seperate thread
+    // track keyboard, mouse, and mouse buttons in separate thread
     match event.event_type {
         EventType::KeyPress(Key::Backspace) => {
             keyboard::handle_backspace(&mut mut_sys_info);
@@ -158,14 +164,13 @@ pub fn track_window_info() {
 
     let current_window_id = mut_sys_info.current_window.as_ref().map(|w| w.id.clone());
 
-    // update timestamps and detect window switches
+    // Detect window switches and update existing entry if found
     for window in &mut mut_sys_info.windows {
         if window.id == win.window_id {
             if window.title != win.title {
                 window.update_title(&win.title);
                 window.update_context();
             }
-            window.update_timestamp();
 
             let is_window_switch = current_window_id
                 .as_ref()
@@ -183,9 +188,6 @@ pub fn track_window_info() {
 
     let new_id = win.window_id.clone();
     mut_sys_info.windows.push(WindowInfo::new(new_id.clone(), &win.app_name, &win.title));
-    if let Some(last) = mut_sys_info.windows.last_mut() {
-        last.update_timestamp();
-    }
 
     let is_window_switch = current_window_id
         .as_ref()

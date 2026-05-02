@@ -35,7 +35,7 @@ pub fn enable_dnd() -> Result<(), String> {
 
     // spawn timer thread
     thread::spawn(|| {
-        thread::sleep(Duration::from_secs(10)); // 10 minutes
+        thread::sleep(Duration::from_secs(600)); // 10 minutes
 
         if let Err(e) = disable_dnd() {
             eprintln!("Failed to disable DND: {}", e);

@@ -22,7 +22,7 @@ pub fn run(kps: i16, bps: i16, wps: i16, idle: i16) -> InterventionType {
         .0;
 
     match best {
-        "Break" => InterventionType::TakeBreak { duration_secs: 300 },
+        "Break" => InterventionType::TakeBreak { duration_secs: 10 },
 
         "CloseTabs" => {
             if let Some((id, title)) = choose_tab_to_close() {
@@ -34,6 +34,6 @@ pub fn run(kps: i16, bps: i16, wps: i16, idle: i16) -> InterventionType {
 
         "DND" => InterventionType::EnableDnd,
 
-        _ => InterventionType::TakeBreak { duration_secs: 30 },
+        _ => InterventionType::TakeBreak { duration_secs: 10 },
     }
 }
